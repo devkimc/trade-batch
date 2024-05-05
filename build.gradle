@@ -34,6 +34,9 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.batch:spring-batch-test'
+
+	// API 호출 테스트 용도
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '3.2.5'
 }
 
 dependencyManagement {
