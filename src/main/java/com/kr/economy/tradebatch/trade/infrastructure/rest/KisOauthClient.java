@@ -9,16 +9,16 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import static com.kr.economy.tradebatch.common.constants.Url.OAUTH_SOCKET;
-import static com.kr.economy.tradebatch.common.constants.Url.OAUTH_TOKEN;
+import static com.kr.economy.tradebatch.common.constants.Url.OAUTH_SOCKET_URL;
+import static com.kr.economy.tradebatch.common.constants.Url.OAUTH_TOKEN_URL;
 
 
-@FeignClient(name = "Kis", url="${endpoint.kis.trade.host}", configuration = OpenFeignConfig.class)
-public interface KisClient {
+@FeignClient(name = "KisOauth", url="${endpoint.kis.trade.host}", configuration = OpenFeignConfig.class)
+public interface KisOauthClient {
 
-    @PostMapping(OAUTH_TOKEN)
+    @PostMapping(OAUTH_TOKEN_URL)
     OauthTokenResDto oauthToken(@RequestBody OauthTokenReqDto oauthTokenReqDto);
 
-    @PostMapping(OAUTH_SOCKET)
+    @PostMapping(OAUTH_SOCKET_URL)
     OauthSocketResDto oauthSocket(@RequestBody OauthSocketReqDto oauthSocketReqDto);
 }

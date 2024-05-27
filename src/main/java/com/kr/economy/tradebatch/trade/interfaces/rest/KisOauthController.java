@@ -1,6 +1,6 @@
 package com.kr.economy.tradebatch.trade.interfaces.rest;
 
-import com.kr.economy.tradebatch.trade.application.KisService;
+import com.kr.economy.tradebatch.trade.application.KisOauthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -11,19 +11,20 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
-@RequestMapping("/kis")
+@RequestMapping("/kis/oauth")
 @RequiredArgsConstructor
-public class KisController {
+public class KisOauthController {
 
-    private final KisService kisService;
+    private final KisOauthService kisOauthService;
 
-    @PostMapping("/oauth/token")
+    @PostMapping("/token")
     public ResponseEntity<Object> oauthToken() {
-        return new ResponseEntity<>(kisService.oauthToken(), HttpStatus.OK);
+        return new ResponseEntity<>(kisOauthService.oauthToken(), HttpStatus.OK);
     }
 
-    @PostMapping("/oauth/socket")
+    @PostMapping("/socket")
     public ResponseEntity<Object> oauthSocket() {
-        return new ResponseEntity<>(kisService.oauthSocket(), HttpStatus.OK);
+
+        return new ResponseEntity<>(kisOauthService.oauthSocket(), HttpStatus.OK);
     }
 }

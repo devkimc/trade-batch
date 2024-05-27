@@ -1,6 +1,8 @@
 package com.kr.economy.tradebatch.trade.application;
 
-import com.kr.economy.tradebatch.trade.infrastructure.rest.KisClient;
+import com.kr.economy.tradebatch.trade.domain.aggregate.KisAccount;
+import com.kr.economy.tradebatch.trade.domain.repositories.KisAccountRepository;
+import com.kr.economy.tradebatch.trade.infrastructure.rest.KisOauthClient;
 import com.kr.economy.tradebatch.trade.infrastructure.rest.dto.OauthSocketReqDto;
 import com.kr.economy.tradebatch.trade.infrastructure.rest.dto.OauthSocketResDto;
 import com.kr.economy.tradebatch.trade.infrastructure.rest.dto.OauthTokenReqDto;
@@ -13,9 +15,10 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class KisService {
+public class KisOauthService {
 
-    private final KisClient kisClient;
+    private final KisOauthClient kisOauthClient;
+    private final KisAccountRepository kisAccountRepository;
 
     @Value("${credential.kis.trade.app-key}")
     private String appKey;
@@ -24,7 +27,6 @@ public class KisService {
     private String secretKey;
 
     public OauthTokenResDto oauthToken() {
-
         OauthTokenReqDto oauthTokenReqDto = OauthTokenReqDto.builder()
                 .grant_type("client_credentials")
                 .appkey(appKey)
@@ -37,18 +39,21 @@ public class KisService {
     }
 
     public OauthSocketResDto oauthSocket() {
-
         OauthSocketReqDto oauthSocketReqDto = OauthSocketReqDto.builder()
                 .grant_type("client_credentials")
                 .appkey(appKey)
                 .secretkey(secretKey)
                 .build();
-
         log.info("[웹소켓 접속키 발급] {}", oauthSocketReqDto);
 
-        OauthSocketResDto oauthSocketResDto = kisClient.oauthSocket(oauthSocketReqDto);
-
+        OauthSocketResDto oauthSocketResDto = kisOauthClient.oauthSocket(oauthSocketReqDto);
         log.info("[웹소켓 접속키 발급] 결과: {}", oauthSocketResDto);
+
+        KisAccount account = KisAccount.builder()
+                .account_id("DEVKIMC")
+                .socketKey(oauthSocketResDto.getApproval_key())
+                .build();
+        kisAccountRepository.save(account);
 
         return oauthSocketResDto;
     }
