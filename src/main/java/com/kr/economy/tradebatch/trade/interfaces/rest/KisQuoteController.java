@@ -18,8 +18,8 @@ public class KisQuoteController {
 
     private final KisQuoteService kisQuoteService;
 
-    @PostMapping("/real-time")
-    public ResponseEntity<Object> getRealTimeQuote() {
-        return new ResponseEntity<>(kisQuoteService.getRealTimeQuoteResDto(), HttpStatus.OK);
-    }
+//    @PostMapping("/real-time")
+//    public ResponseEntity<Object> getRealTimeQuote() {
+//        return new ResponseEntity<>(kisQuoteService.getRealTimeQuoteResDto(), HttpStatus.OK);
+//    }
 }

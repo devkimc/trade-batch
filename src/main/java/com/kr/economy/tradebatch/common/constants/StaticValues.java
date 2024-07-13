@@ -6,4 +6,6 @@ public class StaticValues {
 
     /* 종목 코드 */
     public static final String TICKER_SAMSUNG = "005930";
+
+    public static final String NON_HYPHEN_DAY_PATTERN = "yyyyMMdd";
 }

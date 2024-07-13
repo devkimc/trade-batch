@@ -1,53 +1,65 @@
 package com.kr.economy.tradebatch.config;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kr.economy.tradebatch.trade.domain.aggregate.KisAccount;
-import com.kr.economy.tradebatch.trade.domain.repositories.KisAccountRepository;
+import com.kr.economy.tradebatch.trade.application.KisQuoteService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
-import static com.kr.economy.tradebatch.common.constants.KisStaticValues.*;
-import static com.kr.economy.tradebatch.common.constants.KisStaticValues.TICKER_SAMSUNG;
-
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class MonitoringHandler implements WebSocketHandler {
 
-    private List<WebSocketSession> sessionList = new ArrayList<>();
-
+    private WebSocketSession session;
     private final ObjectMapper objectMapper;
-
-    private final String TEST_ID = "DEVKIMC";
-    private final KisAccountRepository kisAccountRepository;
+    private final KisQuoteService kisQuoteService;
+    private final String SOCKET_RESULT_PING_PONG = "PINGPONG";
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        System.out.println("session = " + session);
-        sessionList.add(session);
+        log.info("[Socket 연결 성공] session: {}", session);
+        this.session = session;
+
+        sendMessage();
     }
 
     @Override
     public void handleMessage(WebSocketSession session, WebSocketMessage<?> message) throws Exception {
 
-        String test = message.getPayload().toString();
-        System.out.println("test = " + test);
+        String response = message.getPayload().toString();
+
+        try {
+            System.out.println("response = " + response);
+            String[] result = response.split("\\|");
+
+            if (result.length >= 4) {
+                String[] quoteData = result[3].split("\\^");
+                kisQuoteService.chkChance(quoteData);
+            }
+        } catch (RuntimeException re) {
+            log.error(re.toString());
+        }
+
+//        SocketResultDto socketResultDto = objectMapper.readValue(response, SocketResultDto.class);
+//        String status = socketResultDto.getHeader().getTr_id();
+
+//        if (SOCKET_RESULT_PING_PONG.equals(status)) {
+//            // TODO: PONG
+//        }
     }
 
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-        System.out.println("TestHandler.handleTransportError");
+        log.info("[Socket 연결 에러] session: {}, exception: {}", session, exception);
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
-        System.out.println("TestHandler.afterConnectionClosed");
+        log.info("[Socket 연결 종료] session: {}, closeStatus: {}", session, closeStatus);
     }
 
     @Override
@@ -55,12 +67,12 @@ public class MonitoringHandler implements WebSocketHandler {
         return false;
     }
 
-    public void sendMessage(String message) {
+    /**
+     * 실시간 호가 조회 전송
+     */
+    public void sendMessage() {
         try {
-            WebSocketSession lastSession = sessionList.get(sessionList.size() - 1);
-            System.out.println("lastSession = " + lastSession);
-
-            lastSession.sendMessage(new TextMessage(message));
+            session.sendMessage(new TextMessage(kisQuoteService.getRealTimeQuote()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

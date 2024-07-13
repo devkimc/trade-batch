@@ -2,24 +2,16 @@ package com.kr.economy.tradebatch.trade.application;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.util.JSONWrappedObject;
-import com.kr.economy.tradebatch.config.MonitoringHandler;
 import com.kr.economy.tradebatch.trade.domain.aggregate.KisAccount;
 import com.kr.economy.tradebatch.trade.domain.repositories.KisAccountRepository;
-import com.kr.economy.tradebatch.trade.infrastructure.rest.dto.GetRealTimeQuoteReqDto;
-import com.kr.economy.tradebatch.trade.infrastructure.rest.dto.GetRealTimeQuoteResDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.*;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 import static com.kr.economy.tradebatch.common.constants.KisStaticValues.*;
 
@@ -37,8 +29,8 @@ public class KisQuoteService {
     private String secretKey;
 
     private final ObjectMapper objectMapper;
+    private final KisOauthService kisOauthService;
     private final KisAccountRepository kisAccountRepository;
-    private final MonitoringHandler monitoringHandler;
 
 //    @Value("${endpoint.kis.trade.socket.host}")
 //    private String socketHost;
@@ -46,17 +38,108 @@ public class KisQuoteService {
 //    @Value("${endpoint.kis.trade.socket.port}")
 //    private int socketPort;
 
-    public GetRealTimeQuoteResDto getRealTimeQuoteResDto() {
+    /**
+     * 소켓키 발급
+     *      1. 소켓키 발급 내역이 존재하지 않은 경우
+     *      2. 소켓키가 만료되지 않은 경우
+     * @param accountId
+     * @return socketKey
+     */
+    public String issueSocketKey(String accountId) {
 
-        KisAccount account = kisAccountRepository.findById(TEST_ID).orElseThrow(() -> new RuntimeException("존재하지 않는 ID: " + TEST_ID));
+        String socketKey;
 
+        Optional<KisAccount> optionalAccount = kisAccountRepository.findById(accountId);
+
+        if (optionalAccount.isPresent() && !optionalAccount.get().isRetired()) {
+            KisAccount account = optionalAccount.get();
+            log.info("[Socket key 발급 - 발급 불필요] 발급 시간: {}, 만료 시간: {}", account.getModDate(), account.getExpirationTime());
+
+            socketKey = account.getSocketKey();
+        } else {
+            if (optionalAccount.isEmpty()) {
+                log.info("[Socket key 발급 - 첫 발급]");
+            } else {
+                KisAccount account = optionalAccount.get();
+
+                log.info("[Socket key 발급 - 재 발급] 발급 시간: {}, 만료 시간: {}", account.getModDate(), account.getExpirationTime());
+            }
+
+            // 소켓키 발급
+            socketKey = kisOauthService.oauthSocket().getApproval_key();
+        }
+
+        return socketKey;
+    }
+
+    /**
+     * 실시간 호가 조회
+     * @return
+     */
+    public String getRealTimeQuote() {
+        String jsonRequest;
+
+        try {
+            String socketKey = issueSocketKey(TEST_ID);
+
+            Map<String, Object> reqMap = getQuoteReqMap(socketKey);
+            jsonRequest = objectMapper.writeValueAsString(reqMap);
+        } catch (JsonProcessingException e) {
+            log.error("[실시간 호가 조회 요청 데이터 생성 에러] {}", e);
+            throw new RuntimeException(e);
+        }
+
+        log.info("[실시간 호가 조회 요청 데이터 생성] {}", jsonRequest);
+        return jsonRequest;
+    }
+
+    /**
+     * 구매 여부 조회
+     * @param data
+     * @return
+     */
+    public boolean chkChance(String[] data) {
+        // 매도량
+        int askpFirstAmount = Integer.parseInt(data[23]);
+        int askpSecondAmount = Integer.parseInt(data[24]);
+        int askpThirdAmount = Integer.parseInt(data[25]);
+        int askpFourthAmount = Integer.parseInt(data[26]);
+        int askpFifthAmount = Integer.parseInt(data[27]);
+        int askpSumAmount = askpFirstAmount + askpSecondAmount + askpThirdAmount + askpFourthAmount + askpFifthAmount;
+
+        // 매수량
+        int bidpFirst = Integer.parseInt(data[13]);
+        int bidpFirstAmount = Integer.parseInt(data[33]);
+        int bidpSecondAmount = Integer.parseInt(data[34]);
+        int bidpThirdAmount = Integer.parseInt(data[35]);
+        int bidpFourthAmount = Integer.parseInt(data[36]);
+        int bidpFifthAmount = Integer.parseInt(data[37]);
+        int bidpSumAmount = bidpFirstAmount + bidpSecondAmount + bidpThirdAmount + bidpFourthAmount + bidpFifthAmount;
+
+        boolean isChance = bidpSumAmount > askpSumAmount;
+
+        if (isChance) {
+            log.info("[구매 여부 판단 - 상승 예정] 현재가: {}, {} > {}", bidpFirst, bidpSumAmount, askpSumAmount);
+        } else {
+            log.info("[구매 여부 판단 - 하락 예정] 현재가: {}, {} < {}", bidpFirst, bidpSumAmount, askpSumAmount);
+        }
+
+        return isChance;
+    }
+
+    /**
+     * 실시간 호가 조회 요청 데이터 생성
+     * @param socketKey
+     * @return
+     */
+    private Map<String, Object> getQuoteReqMap(String socketKey) {
         HashMap<String, Object> map = new HashMap<>();
         HashMap<String, String> headerMap = new HashMap<>();
         HashMap<String, String> inputMap = new HashMap<>();
         HashMap<String, Object> bodyMap = new HashMap<>();
 
         // header 세팅
-        headerMap.put("approval_key", account.getSocketKey());
+        headerMap.put("approval_key", socketKey);
         headerMap.put("custtype", CUST_TYPE_PERSONAL);
         headerMap.put("tr_type", TRADE_TYPE_REGISTRATION);
         headerMap.put("content-type", "utf-8");
@@ -69,136 +152,9 @@ public class KisQuoteService {
 
         map.put("header", headerMap);
         map.put("body", bodyMap);
-
-        String jsonRequest = null;
-
-        try {
-            jsonRequest = objectMapper.writeValueAsString(map);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-
-        monitoringHandler.sendMessage(jsonRequest);
-
-//        GetRealTimeQuoteReqDto getRealTimeQuoteReqDto = GetRealTimeQuoteReqDto.builder()
-//                .tr_id(TR_ID_H0STASP0)
-//                .tr_key(TICKER_SAMSUNG)
-//                .build();
-//        log.info("[실시간 호가 조회] {}", getRealTimeQuoteReqDto);
-//
-//        KisAccount account = kisAccountRepository.findById(TEST_ID).orElseThrow(() -> new RuntimeException("존재하지 않는 ID: " + TEST_ID));
-//
-//        HashMap<String, Object> map = new HashMap<>();
-//
-//        HashMap<String, String> headerMap = new HashMap<>();
-//
-//        HashMap<String, String> inputMap = new HashMap<>();
-//        HashMap<String, Object> bodyMap = new HashMap<>();
-//
-//
-//        // header 세팅
-//        headerMap.put("approval_key", account.getSocketKey());
-//        headerMap.put("custtype", CUST_TYPE_PERSONAL);
-//        headerMap.put("tr_type", TRADE_TYPE_REGISTRATION);
-//        headerMap.put("content-type", "utf-8");
-//
-//        // body 세팅
-//        inputMap.put("tr_id", TR_ID_H0STASP0);
-//        inputMap.put("tr_key", TICKER_SAMSUNG);
-//
-//        bodyMap.put("input", inputMap);
-//
-//        map.put("header", headerMap);
-//        map.put("body", bodyMap);
-//
-//        try {
-//            String s = mapToStr(map);
-//            testSocket(s);
-//        } catch (JsonProcessingException e) {
-//            throw new RuntimeException(e);
-//        }
-
-        log.info("[실시간 호가 조회] 종료");
-
-//        GetRealTimeQuoteResDto realTimeQuote = kisQuoteClient.getRealTimeQuote(
-//                account.getSocketKey(),
-//                CUST_TYPE_PERSONAL,
-//                TRADE_TYPE_REGISTRATION,
-//                getRealTimeQuoteReqDto
-//        );
-//        log.info("[실시간 호가 조회] 결과 {}", realTimeQuote);
-
-        return null;
+        return map;
     }
 
-    private void testSocket(String message) {
-        Socket socket = null;
-
-        try {
-            socket = new Socket();
-            log.info("[Socket request]");
-
-//            socket.connect(new InetSocketAddress("ops.koreainvestment.com", socketPort));
-            log.info("[Socket connect] {}", socket);
-
-            byte[] bytes = null;
-
-            // Socket에서 가져온 출력스트림
-            OutputStream os = socket.getOutputStream();
-//            DataOutputStream dos = new DataOutputStream(os);
-//            bytes = message.getBytes("UTF-8");
-//            dos.writeInt(bytes.length);
-//            dos.write(bytes, 0, bytes.length);
-//            dos.flush();
-
-            // send bytes
-            PrintWriter pw = new PrintWriter(os);
-
-            log.info("[Socket Data Send Success] {}", message);
-
-            // Socket 에서 가져온 입력스트림
-            InputStream is = socket.getInputStream();
-            int read = is.read();
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            String s = reader.readLine();
-            System.out.println("s = " + s);
-
-
-            // read int
-//            int receiveLength = dis.readInt();
-//
-//            // receive bytes
-//            if (receiveLength > 0) {
-//                byte receiveByte[] = new byte[receiveLength];
-//                dis.readFully(receiveByte, 0, receiveLength);
-//
-//                message = new String(receiveByte);
-//                log.info("[Socket Data Receive Success] {}", message);
-//            } else {
-//                log.info("[Empty Data Receive] message: {}, receiveLength: {}", message, receiveLength);
-//            }
-
-            // OutputStream, InputStream 종료
-            os.close();
-            is.close();
-
-            // Socket 종료
-            socket.close();
-            log.info("[Socket closed]");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        if (!socket.isClosed()) {
-            try {
-                socket.close();
-                log.info("[Socket close]");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
 
     private String mapToStr(HashMap<String, Object> map) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
