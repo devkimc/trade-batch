@@ -1,11 +1,11 @@
-package com.kr.economy.tradebatch.trade.domain.aggregate;
+package com.kr.economy.tradebatch.trade.domain.constants;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum BidAskBalanceIncStatus {
+public enum PriceTrendType {
 
     NONE("0"),
     INCREASE("1"),

@@ -1,6 +1,6 @@
 package com.kr.economy.tradebatch.trade.application;
 
-import com.kr.economy.tradebatch.trade.domain.aggregate.KisAccount;
+import com.kr.economy.tradebatch.trade.domain.model.aggregates.KisAccount;
 import com.kr.economy.tradebatch.trade.domain.repositories.KisAccountRepository;
 import com.kr.economy.tradebatch.trade.infrastructure.rest.KisOauthClient;
 import com.kr.economy.tradebatch.trade.infrastructure.rest.dto.OauthSocketReqDto;

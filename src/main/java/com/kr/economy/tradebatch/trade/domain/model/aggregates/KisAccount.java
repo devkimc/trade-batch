@@ -1,4 +1,4 @@
-package com.kr.economy.tradebatch.trade.domain.aggregate;
+package com.kr.economy.tradebatch.trade.domain.model.aggregates;
 
 import jakarta.persistence.*;
 import lombok.*;

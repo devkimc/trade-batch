@@ -1,13 +1,18 @@
 package com.kr.economy.tradebatch.config;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kr.economy.tradebatch.trade.application.KisQuoteService;
+import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 
 import java.io.IOException;
+
+import static com.kr.economy.tradebatch.common.constants.KisStaticValues.TR_ID_H0STASP0;
+import static com.kr.economy.tradebatch.common.constants.KisStaticValues.TR_ID_H0STCNT0;
 
 @Slf4j
 @Component
@@ -17,7 +22,6 @@ public class MonitoringHandler implements WebSocketHandler {
     private WebSocketSession session;
     private final ObjectMapper objectMapper;
     private final KisQuoteService kisQuoteService;
-    private final String SOCKET_RESULT_PING_PONG = "PINGPONG";
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -29,27 +33,32 @@ public class MonitoringHandler implements WebSocketHandler {
 
     @Override
     public void handleMessage(WebSocketSession session, WebSocketMessage<?> message) throws Exception {
-
-        String response = message.getPayload().toString();
-
         try {
-            System.out.println("response = " + response);
+            if (message == null) {
+                log.warn("message 미존재");
+                return;
+            }
+
+            if (message.getPayload() == null) {
+                log.warn("message.getPayload() 미존재");
+                return;
+            }
+
+            String response = message.getPayload().toString();
+
+            if (StringUtils.isEmpty(response)) {
+                return;
+            }
+
+            log.info("response" + response);
             String[] result = response.split("\\|");
 
             if (result.length >= 4) {
                 String[] quoteData = result[3].split("\\^");
-                kisQuoteService.chkChance(quoteData);
             }
         } catch (RuntimeException re) {
-            log.error(re.toString());
+            log.error("[Socket 응답값 객체 파싱 실패]: {}, {}", message, re.toString());
         }
-
-//        SocketResultDto socketResultDto = objectMapper.readValue(response, SocketResultDto.class);
-//        String status = socketResultDto.getHeader().getTr_id();
-
-//        if (SOCKET_RESULT_PING_PONG.equals(status)) {
-//            // TODO: PONG
-//        }
     }
 
     @Override
@@ -68,13 +77,22 @@ public class MonitoringHandler implements WebSocketHandler {
     }
 
     /**
-     * 실시간 호가 조회 전송
+     * 실시간 조회 전송
      */
     public void sendMessage() {
+
+        // 1. 실시간 체결가 조회
         try {
-            session.sendMessage(new TextMessage(kisQuoteService.getRealTimeQuote()));
+            session.sendMessage(new TextMessage(kisQuoteService.getRealTimeQuote(TR_ID_H0STCNT0)));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("[실시간 조회 실패 - 체결가]" + e);
+        }
+
+        // 2. 실시간 호가 조회
+        try {
+            session.sendMessage(new TextMessage(kisQuoteService.getRealTimeQuote(TR_ID_H0STASP0)));
+        } catch (IOException e) {
+            throw new RuntimeException("[실시간 조회 실패 - 호가]" + e);
         }
     }
 }

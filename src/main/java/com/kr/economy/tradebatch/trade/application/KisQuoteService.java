@@ -2,7 +2,7 @@ package com.kr.economy.tradebatch.trade.application;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kr.economy.tradebatch.trade.domain.aggregate.KisAccount;
+import com.kr.economy.tradebatch.trade.domain.model.aggregates.KisAccount;
 import com.kr.economy.tradebatch.trade.domain.repositories.KisAccountRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +18,7 @@ import static com.kr.economy.tradebatch.common.constants.KisStaticValues.*;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+// TODO: 서비스 명 변경, '실시간 조회 서비스'
 public class KisQuoteService {
 
     private final String TEST_ID = "DEVKIMC";
@@ -76,13 +77,13 @@ public class KisQuoteService {
      * 실시간 호가 조회
      * @return
      */
-    public String getRealTimeQuote() {
+    public String getRealTimeQuote(String tradeId) {
         String jsonRequest;
 
         try {
             String socketKey = issueSocketKey(TEST_ID);
 
-            Map<String, Object> reqMap = getQuoteReqMap(socketKey);
+            Map<String, Object> reqMap = getQuoteReqMap(tradeId, socketKey);
             jsonRequest = objectMapper.writeValueAsString(reqMap);
         } catch (JsonProcessingException e) {
             log.error("[실시간 호가 조회 요청 데이터 생성 에러] {}", e);
@@ -128,11 +129,11 @@ public class KisQuoteService {
     }
 
     /**
-     * 실시간 호가 조회 요청 데이터 생성
+     * 실시간 조회 요청 데이터 생성
      * @param socketKey
      * @return
      */
-    private Map<String, Object> getQuoteReqMap(String socketKey) {
+    private Map<String, Object> getQuoteReqMap(String tradeId, String socketKey) {
         HashMap<String, Object> map = new HashMap<>();
         HashMap<String, String> headerMap = new HashMap<>();
         HashMap<String, String> inputMap = new HashMap<>();
@@ -145,7 +146,7 @@ public class KisQuoteService {
         headerMap.put("content-type", "utf-8");
 
         // body 세팅
-        inputMap.put("tr_id", TR_ID_H0STASP0);
+        inputMap.put("tr_id", tradeId);
         inputMap.put("tr_key", TICKER_SAMSUNG);
 
         bodyMap.put("input", inputMap);
