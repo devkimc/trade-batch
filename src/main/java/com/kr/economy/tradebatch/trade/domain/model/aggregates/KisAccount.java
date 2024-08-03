@@ -20,7 +20,7 @@ public class KisAccount {
 
     @Id
     @Column(nullable = false)
-    private String account_id;
+    private String accountId;
 
     @Column
     private String socketKey;

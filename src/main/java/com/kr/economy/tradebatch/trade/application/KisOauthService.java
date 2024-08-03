@@ -66,7 +66,7 @@ public class KisOauthService {
         log.info("[웹소켓 접속키 발급] 결과: {}", oauthSocketResDto);
 
         KisAccount account = KisAccount.builder()
-                .account_id("DEVKIMC")
+                .accountId("DEVKIMC")
                 .socketKey(oauthSocketResDto.getApproval_key())
                 .build();
         kisAccountRepository.save(account);

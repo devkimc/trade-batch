@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 
 import static com.kr.economy.tradebatch.common.constants.ResponseCode.SERVER_ERROR;
-import static com.kr.economy.tradebatch.common.constants.StaticValues.CONTENT_TYPE;
+import static com.kr.economy.tradebatch.common.constants.StaticValues.HEADER_CONTENT_TYPE;
 
 
 @Slf4j
@@ -41,7 +41,7 @@ public class OpenFeignConfig {
     @Bean
     public RequestInterceptor requestInterceptor() {
         return requestTemplate -> {
-            requestTemplate.header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+            requestTemplate.header(HEADER_CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
             requestTemplate.header("Accept", MediaType.APPLICATION_JSON_VALUE);
         };
     }

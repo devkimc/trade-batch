@@ -20,7 +20,6 @@ import static com.kr.economy.tradebatch.common.constants.KisStaticValues.TR_ID_H
 public class MonitoringHandler implements WebSocketHandler {
 
     private WebSocketSession session;
-    private final ObjectMapper objectMapper;
     private final KisQuoteService kisQuoteService;
 
     @Override
@@ -89,10 +88,10 @@ public class MonitoringHandler implements WebSocketHandler {
         }
 
         // 2. 실시간 호가 조회
-        try {
-            session.sendMessage(new TextMessage(kisQuoteService.getRealTimeQuote(TR_ID_H0STASP0)));
-        } catch (IOException e) {
-            throw new RuntimeException("[실시간 조회 실패 - 호가]" + e);
-        }
+//        try {
+//            session.sendMessage(new TextMessage(kisQuoteService.getRealTimeQuote(TR_ID_H0STASP0)));
+//        } catch (IOException e) {
+//            throw new RuntimeException("[실시간 조회 실패 - 호가]" + e);
+//        }
     }
 }
