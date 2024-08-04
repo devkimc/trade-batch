@@ -11,7 +11,8 @@ import static com.kr.economy.tradebatch.common.constants.StaticValues.*;
 import static com.kr.economy.tradebatch.common.constants.Url.*;
 
 
-@FeignClient(name = "DomesticStockOrder", url="${endpoint.kis.trade.host}", configuration = OpenFeignConfig.class)
+@FeignClient(name = "DomesticStockOrder", url="${endpoint.kis.trade.host}", configuration = OpenFeignConfig.class,
+        fallback = DomesticStockOrderClientFallback.class)
 public interface DomesticStockOrderClient {
 
     /**

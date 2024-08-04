@@ -1,10 +1,13 @@
 package com.kr.economy.tradebatch.trade.domain.model.aggregates;
 
+import com.kr.economy.tradebatch.trade.application.OrderInCashCommand;
 import com.kr.economy.tradebatch.trade.domain.constants.KisOrderDvsnCode;
 import com.kr.economy.tradebatch.trade.domain.constants.OrderDvsnCode;
 import com.kr.economy.tradebatch.trade.domain.constants.OrderStatus;
+import com.kr.economy.tradebatch.trade.infrastructure.rest.dto.OrderInCashResDto;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -19,6 +22,7 @@ import java.time.LocalDateTime;
 @Builder
 @ToString
 @EntityListeners(AuditingEntityListener.class)
+@Slf4j
 public class Order {
 
     @Id
@@ -69,15 +73,35 @@ public class Order {
     private LocalDateTime lastModifiedDate;     // 수정 시간
 
     /**
-     * 주문 요청 후 결과를 업데이트 한다.
-     * @param kisOrderId
-     * @param resultCode
-     * @param resultMsg
+     * 현금 주문 정보
+     * @param orderInCashCommand
      */
-    public void updateOrderResult(String kisOrderId,
-                                  String resultCode,
-                                  String resultMsg) {
-        this.kisOrderId = kisOrderId;
+    public Order (OrderInCashCommand orderInCashCommand) {
+        this.accountId = orderInCashCommand.getAccountId();
+        this.ticker = orderInCashCommand.getTicker();
+        this.orderDvsnCode = orderInCashCommand.getOrderDvsnCode();
+        this.sharePrice = orderInCashCommand.getSharePrice();
+        this.orderPrice = orderInCashCommand.getOrderPrice();
+        this.qty = orderInCashCommand.getQty();
+        this.kisOrderDvsnCode = orderInCashCommand.getKisOrderDvsnCode();
+    }
+
+    /**
+     * 주문 요청 후 결과를 업데이트 한다.
+     * @param orderInCashResDto
+     */
+    public void updateOrderResult(OrderInCashResDto orderInCashResDto) {
+        String resultCode = orderInCashResDto.getRt_cd();
+        String resultMsg = orderInCashResDto.getMsg();
+
+        if ("0".equals(resultCode)) {
+            this.orderStatus = OrderStatus.SUCCESS;
+        } else {
+            this.orderStatus = OrderStatus.FAIL;
+            log.error("[주문 요청 실패] - 응답 코드: {}, 응답 메시지 {}", resultCode, resultMsg);
+        }
+
+        this.kisOrderId = orderInCashResDto.getOutput().get(0).getODNO();
         this.resultCode = resultCode;
         this.resultMsg = resultMsg;
     }

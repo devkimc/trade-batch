@@ -18,8 +18,11 @@ public class OrderInCashResDto {
     private List<OutPut> output;    // 응답 상세
 
     @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     @ToString
-    public class OutPut {
+    public static class OutPut {
         private String KRX_FWDG_ORD_ORGNO;  // 한국거래소 전송주문 조직번호
         private String ODNO;                // 주문 번호
         private String ORD_TMD;             // 주문 시각 (HHMMSS)
