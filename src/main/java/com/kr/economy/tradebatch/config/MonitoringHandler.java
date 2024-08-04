@@ -1,7 +1,5 @@
 package com.kr.economy.tradebatch.config;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kr.economy.tradebatch.trade.application.KisQuoteService;
 import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +9,6 @@ import org.springframework.web.socket.*;
 
 import java.io.IOException;
 
-import static com.kr.economy.tradebatch.common.constants.KisStaticValues.TR_ID_H0STASP0;
 import static com.kr.economy.tradebatch.common.constants.KisStaticValues.TR_ID_H0STCNT0;
 
 @Slf4j
@@ -82,7 +79,7 @@ public class MonitoringHandler implements WebSocketHandler {
 
         // 1. 실시간 체결가 조회
         try {
-            session.sendMessage(new TextMessage(kisQuoteService.getRealTimeQuote(TR_ID_H0STCNT0)));
+            session.sendMessage(new TextMessage(kisQuoteService.getRealTimeInfo(TR_ID_H0STCNT0)));
         } catch (IOException e) {
             throw new RuntimeException("[실시간 조회 실패 - 체결가]" + e);
         }

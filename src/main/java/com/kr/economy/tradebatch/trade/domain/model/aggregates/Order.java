@@ -47,8 +47,6 @@ public class Order {
     @Column
     private Float orderPrice;                   // 시장가 주문의 경우 null
 
-    // TODO: Q. 주문한 수량이 여러개일 경우 각각 다른 가격에 체결되었다면, 각각 주문번호를 새로 등록할 것인지?
-    // TODO: A. 체결 내역이 각각 저장 된다. 주문 응답 후 체결 내역 조회 요청 필요
     @Column(nullable = false)
     private Float qty;                          // 주문 수량
 

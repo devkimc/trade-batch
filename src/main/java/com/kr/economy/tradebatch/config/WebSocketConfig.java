@@ -42,12 +42,12 @@ public class WebSocketConfig implements WebSocketConfigurer {
      * buffer 사이즈를 증가시키기 위해 추가
      * @return
      */
-    @Bean
-    public ServletServerContainerFactoryBean createServletServerContainerFactoryBean() {
-        ServletServerContainerFactoryBean container = new ServletServerContainerFactoryBean();
-        container.setMaxTextMessageBufferSize(32768);
-        container.setMaxBinaryMessageBufferSize(32768);
-        log.info("Websocket factory returned");
-        return container;
-    }
+//    @Bean
+//    public ServletServerContainerFactoryBean createServletServerContainerFactoryBean() {
+//        ServletServerContainerFactoryBean container = new ServletServerContainerFactoryBean();
+//        container.setMaxTextMessageBufferSize(32768);
+//        container.setMaxBinaryMessageBufferSize(32768);
+//        log.info("Websocket factory returned");
+//        return container;
+//    }
 }

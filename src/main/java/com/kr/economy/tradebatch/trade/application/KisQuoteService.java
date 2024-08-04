@@ -74,10 +74,10 @@ public class KisQuoteService {
     }
 
     /**
-     * 실시간 호가 조회
+     * 실시간 정보 조회
      * @return
      */
-    public String getRealTimeQuote(String tradeId) {
+    public String getRealTimeInfo(String tradeId) {
         String jsonRequest;
 
         try {

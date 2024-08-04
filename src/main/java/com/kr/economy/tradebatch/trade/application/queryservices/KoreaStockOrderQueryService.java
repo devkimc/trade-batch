@@ -4,9 +4,10 @@ import com.kr.economy.tradebatch.trade.domain.constants.BidAskBalanceTrendType;
 import com.kr.economy.tradebatch.trade.domain.constants.PriceTrendType;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.BidAskBalanceRatioHistory;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.ExecutionHistory;
+import com.kr.economy.tradebatch.trade.domain.model.aggregates.SharePriceHistory;
 import com.kr.economy.tradebatch.trade.domain.repositories.BidAskBalanceRatioHistoryCustomRepository;
-import com.kr.economy.tradebatch.trade.domain.repositories.ExecutionHistoryRepository;
-import com.kr.economy.tradebatch.trade.infrastructure.repositories.ExecutionHistoryRepositoryCustom;
+import com.kr.economy.tradebatch.trade.domain.repositories.SharePriceHistoryRepository;
+import com.kr.economy.tradebatch.trade.infrastructure.repositories.SharePriceHistoryRepositoryCustom;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,8 +20,8 @@ import java.util.List;
 @Slf4j
 public class KoreaStockOrderQueryService {
 
-    private final ExecutionHistoryRepository executionHistoryRepository;
-    private final ExecutionHistoryRepositoryCustom executionHistoryRepositoryCustom;
+    private final SharePriceHistoryRepository sharePriceHistoryRepository;
+    private final SharePriceHistoryRepositoryCustom sharePriceHistoryRepositoryCustom;
     private final BidAskBalanceRatioHistoryCustomRepository bidAskBalanceRatioHistoryCustomRepository;
 
     /**
@@ -31,7 +32,7 @@ public class KoreaStockOrderQueryService {
     @Transactional
     public boolean getBuySignal(String ticker) {
         boolean result;
-        ExecutionHistory lastPriceTrendHistory;
+        SharePriceHistory lastPriceTrendHistory;
 
         try {
             // 최근 매수 추이 이력 조회
@@ -51,7 +52,7 @@ public class KoreaStockOrderQueryService {
                 return false;
             }
 
-            List<ExecutionHistory> recentPriceTrendHistory = executionHistoryRepositoryCustom.getRecentTrendHistory(ticker);
+            List<SharePriceHistory> recentPriceTrendHistory = sharePriceHistoryRepositoryCustom.getRecentTrendHistory(ticker);
 
             // 현재가 추이가 4회 연속 감소일 경우 매수
             recentPriceTrendHistory.stream().allMatch(
@@ -69,7 +70,7 @@ public class KoreaStockOrderQueryService {
         }
 
         lastPriceTrendHistory.setBuySign();
-        executionHistoryRepository.save(lastPriceTrendHistory);
+        sharePriceHistoryRepository.save(lastPriceTrendHistory);
 
         return true;
     }
