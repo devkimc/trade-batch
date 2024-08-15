@@ -12,7 +12,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 //@EnableBatchProcessing
 @EnableFeignClients
 @SpringBootApplication
-@EnableJpaAuditing
+//@EnableJpaAuditing
 //@EnableJpaRepositories(basePackages = "com.kr.economy")
 public class TradeBatchApplication {
 

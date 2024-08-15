@@ -1,7 +1,8 @@
 package com.kr.economy.tradebatch;
 
 import com.kr.economy.tradebatch.trade.application.commandservices.BidAskBalanceCommandService;
-import com.kr.economy.tradebatch.trade.application.queryservices.BidAskBalanceQueryService;
+import com.kr.economy.tradebatch.trade.application.commandservices.SharePriceHistoryCommandService;
+import com.kr.economy.tradebatch.trade.application.queryservices.KoreaStockOrderQueryService;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,21 +11,20 @@ import org.springframework.context.annotation.Import;
 
 import java.io.FileInputStream;
 
+import static com.kr.economy.tradebatch.common.constants.KisStaticValues.TICKER_SAMSUNG;
+
 @SpringBootTest
 @Import({TestConfig.class})
 public class TradeBatchApplicationTests {
 
 	@Autowired
+	private SharePriceHistoryCommandService sharePriceHistoryCommandService;
+
+	@Autowired
 	private BidAskBalanceCommandService bidAskBalanceCommandService;
 
 	@Autowired
-	private BidAskBalanceQueryService bidAskBalanceQueryService;
-
-
-	@Test
-	public void tttt() {
-		System.out.println("true = " + true);
-	}
+	private KoreaStockOrderQueryService koreaStockOrderQueryService;
 
 	@Test
 	public void buySignTest() throws Exception {
@@ -42,14 +42,22 @@ public class TradeBatchApplicationTests {
 			String[] resultList = responseList[i].split("\\|");
 			String[] quoteDataList = resultList[3].split("\\^");
 
-			String currentPrice = quoteDataList[13];
-			String totalAskAmount = quoteDataList[43];
-			String totalBidAmount = quoteDataList[44];
+			Float valuableAskAmount = 0F;
+			Float valuableBidAmount = 0F;
 
-			float bidAskBalanceRatio = Float.parseFloat(totalBidAmount) / Float.parseFloat(totalAskAmount);
+			// 응답값 중 3번째 인덱스 부터가 매도 호가임
+			// 매수 호가는 매수의 10번 째 뒤부터임
+			for (int j = 3; j < 8; j++) {
+				valuableAskAmount += Float.parseFloat(quoteDataList[j]);
+				valuableBidAmount += Float.parseFloat(quoteDataList[j + 10]);
+			}
 
-			bidAskBalanceCommandService.createBidAskBalanceRatioHistory(bidAskBalanceRatio, Float.parseFloat(currentPrice));
-			bidAskBalanceQueryService.getBuySignal();
+			float bidAskBalanceRatio = valuableBidAmount / valuableAskAmount;
+
+			bidAskBalanceCommandService.createBidAskBalanceRatioHistory(TICKER_SAMSUNG, bidAskBalanceRatio);
+
+//			executionHistoryCommandService.createExecutionHistory(TICKER_SAMSUNG, );
+//			koreaStockOrderQueryService.getBuySignal(TICKER_SAMSUNG);
 		}
 	}
 

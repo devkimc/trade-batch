@@ -3,7 +3,6 @@ package com.kr.economy.tradebatch.trade.application.queryservices;
 import com.kr.economy.tradebatch.trade.domain.constants.BidAskBalanceTrendType;
 import com.kr.economy.tradebatch.trade.domain.constants.PriceTrendType;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.BidAskBalanceRatioHistory;
-import com.kr.economy.tradebatch.trade.domain.model.aggregates.ExecutionHistory;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.SharePriceHistory;
 import com.kr.economy.tradebatch.trade.domain.repositories.BidAskBalanceRatioHistoryCustomRepository;
 import com.kr.economy.tradebatch.trade.domain.repositories.SharePriceHistoryRepository;
@@ -31,7 +30,7 @@ public class KoreaStockOrderQueryService {
      */
     @Transactional
     public boolean getBuySignal(String ticker) {
-        boolean result;
+        boolean isBuySignal;
         SharePriceHistory lastPriceTrendHistory;
 
         try {
@@ -44,22 +43,22 @@ public class KoreaStockOrderQueryService {
             }
 
             // 매수매도잔량비 추이가 4회 연속 증가일 경우 매수
-            result = recentHistoryByBidAskBalance.stream().allMatch(
+            isBuySignal = recentHistoryByBidAskBalance.stream().allMatch(
                     h -> BidAskBalanceTrendType.INCREASE.equals(h.getBidAskBalanceTrendType())
             );
 
-            if (!result) {
+            if (!isBuySignal) {
                 return false;
             }
 
             List<SharePriceHistory> recentPriceTrendHistory = sharePriceHistoryRepositoryCustom.getRecentTrendHistory(ticker);
 
             // 현재가 추이가 4회 연속 감소일 경우 매수
-            recentPriceTrendHistory.stream().allMatch(
+            isBuySignal = recentPriceTrendHistory.stream().allMatch(
                     h -> PriceTrendType.DECREASE.equals(h.getPriceTrendType())
             );
 
-            if (!result) {
+            if (!isBuySignal) {
                 return false;
             }
 

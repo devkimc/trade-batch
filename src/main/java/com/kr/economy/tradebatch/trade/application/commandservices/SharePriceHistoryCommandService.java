@@ -1,6 +1,5 @@
 package com.kr.economy.tradebatch.trade.application.commandservices;
 
-import com.kr.economy.tradebatch.trade.domain.model.aggregates.ExecutionHistory;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.SharePriceHistory;
 import com.kr.economy.tradebatch.trade.domain.repositories.SharePriceHistoryRepository;
 import lombok.RequiredArgsConstructor;
