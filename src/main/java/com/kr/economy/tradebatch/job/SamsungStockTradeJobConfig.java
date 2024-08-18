@@ -1,5 +1,6 @@
 package com.kr.economy.tradebatch.job;
 
+import com.kr.economy.tradebatch.trade.application.SocketTestService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -22,6 +23,8 @@ public class SamsungStockTradeJobConfig {
 
     private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
+    private final SocketTestService socketTestService;
+
 
     @Bean
     public Job testJob() {
@@ -41,12 +44,12 @@ public class SamsungStockTradeJobConfig {
     @Bean
     @JobScope
     public Tasklet readListTasklet() {
+        System.out.println("called tasklet!");
+
+        socketTestService.test();
+
         return (contribution, chunkContext) -> {
             return RepeatStatus.FINISHED;
         };
     }
-
-
-
-
 }

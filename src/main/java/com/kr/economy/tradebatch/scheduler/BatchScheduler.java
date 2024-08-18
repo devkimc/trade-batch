@@ -14,6 +14,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -25,11 +26,13 @@ public class BatchScheduler {
     @Autowired
     private SamsungStockTradeJobConfig jobConfig;
 
-    @Scheduled(cron = "0/20 * * * * *")
+    // cron
+    // 초 / 분 / 시 / 일 / 월 / 요일 (0-7, 0과 7은 일요일)
+    @Scheduled(cron = "0 34 14 * * *")
     public void runJob() {
-        HashMap<String, JobParameter> confMap = new HashMap<>();
+        Map<String, JobParameter<?>> confMap = new HashMap<>();
         confMap.put("time", new JobParameter(System.currentTimeMillis(), Long.class, true));
-        JobParameters jobParameters = new JobParameters();
+        JobParameters jobParameters = new JobParameters(confMap);
 
         try {
             jobLauncher.run(jobConfig.testJob(), jobParameters);
