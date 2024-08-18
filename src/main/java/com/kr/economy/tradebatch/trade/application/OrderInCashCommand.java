@@ -19,6 +19,6 @@ public class OrderInCashCommand {
     private OrderDvsnCode orderDvsnCode;
     private Float sharePrice;
     private Float orderPrice;
-    private Float qty;
+    private int qty;
     private KisOrderDvsnCode kisOrderDvsnCode;
 }

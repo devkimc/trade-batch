@@ -48,7 +48,7 @@ public class Order {
     private Float orderPrice;                   // 시장가 주문의 경우 null
 
     @Column(nullable = false)
-    private Float qty;                          // 주문 수량
+    private int qty;                          // 주문 수량
 
     @Column(nullable = false)
     private KisOrderDvsnCode kisOrderDvsnCode;  // 한투 주문 구분 코드  (시장가 주문, 지정가 주문 등)
