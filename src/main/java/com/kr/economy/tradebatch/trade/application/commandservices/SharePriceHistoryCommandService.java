@@ -21,7 +21,7 @@ public class SharePriceHistoryCommandService {
      * @param ticker
      * @param sharePrice
      */
-    public void createSharePriceHistory(String ticker, int sharePrice) {
+    public void createSharePriceHistory(String ticker, int sharePrice, String tradingTime) {
         Optional<SharePriceHistory> optLastSharePrice = sharePriceHistoryRepository.findTopByTickerOrderByCreatedDateDesc(ticker);
 
         optLastSharePrice.ifPresentOrElse(
@@ -30,6 +30,7 @@ public class SharePriceHistoryCommandService {
                             .ticker(ticker)
                             .sharePrice(sharePrice)
                             .priceTrendType(h.getNextPriceTrendType(sharePrice))
+                            .tradingTime(tradingTime)
                             .build();
                     sharePriceHistoryRepository.save(sharePriceHistory);
                 }, () -> {

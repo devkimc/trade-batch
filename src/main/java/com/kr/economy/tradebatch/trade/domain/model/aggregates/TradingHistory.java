@@ -47,11 +47,11 @@ public class TradingHistory {
     private KisOrderDvsnCode kisOrderDvsnCode;  // 한투 주문 구분 코드  (시장가 주문, 지정가 주문 등)
 
     // 체결 시간 (HHMMSS)
-    @Column(nullable = false)
+    @Column
     private String tradingTime;
 
     // 고객 ID
-    @Column(nullable = false)
+    @Column
     private String kisId;                   // 한투 ID
 
     // 주문번호

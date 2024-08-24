@@ -28,6 +28,9 @@ public class SharePriceHistory {
     private String ticker;                  // 종목 코드
 
     @Column
+    private String tradingTime;             // 체결 시간
+
+    @Column
     private int sharePrice;                 // 주가 (현재가, 체결가)
 
     @Column
@@ -74,8 +77,6 @@ public class SharePriceHistory {
         } else {
             nextPriceTrend = PriceTrendType.FREEZING;
         }
-
-        log.info("[주가 증감 추이] 이전 가격: {}, 현재 가격: {}, 증감 여부: {}", this.sharePrice, curSharePrice, nextPriceTrend);
 
         return nextPriceTrend;
     }

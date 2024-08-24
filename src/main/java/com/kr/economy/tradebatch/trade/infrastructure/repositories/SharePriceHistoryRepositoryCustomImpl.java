@@ -13,9 +13,7 @@ import java.util.List;
 import static com.kr.economy.tradebatch.trade.domain.model.aggregates.QSharePriceHistory.*;
 
 @Repository
-//@RequiredArgsConstructor
 public class SharePriceHistoryRepositoryCustomImpl extends QuerydslRepositorySupport implements SharePriceHistoryRepositoryCustom {
-//public class SharePriceHistoryRepositoryCustomImpl implements SharePriceHistoryRepositoryCustom {
 
     private final JPAQueryFactory jpaQueryFactory;
 
@@ -34,7 +32,7 @@ public class SharePriceHistoryRepositoryCustomImpl extends QuerydslRepositorySup
                                 .and(sharePriceHistory.priceTrendType.ne(PriceTrendType.FREEZING))
                 )
                 .orderBy(sharePriceHistory.createdDate.desc())
-                .limit(4)
+                .limit(2)
                 .fetch();
     }
 }

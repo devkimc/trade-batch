@@ -28,7 +28,7 @@ public class BatchScheduler {
 
     // cron
     // 초 / 분 / 시 / 일 / 월 / 요일 (0-7, 0과 7은 일요일)
-    @Scheduled(cron = "0 34 14 * * *")
+    @Scheduled(cron = "0 0 9 * * *")
     public void runJob() {
         Map<String, JobParameter<?>> confMap = new HashMap<>();
         confMap.put("time", new JobParameter(System.currentTimeMillis(), Long.class, true));

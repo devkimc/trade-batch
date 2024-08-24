@@ -42,7 +42,7 @@ public class KoreaStockOrderQueryService {
                 return false;
             }
 
-            // 매수매도잔량비 추이가 4회 연속 증가일 경우 매수
+            // 매수매도잔량비 추이가 3회 연속 증가일 경우 매수
             isBuySignal = recentHistoryByBidAskBalance.stream().allMatch(
                     h -> BidAskBalanceTrendType.INCREASE.equals(h.getBidAskBalanceTrendType())
             );
@@ -53,7 +53,7 @@ public class KoreaStockOrderQueryService {
 
             List<SharePriceHistory> recentPriceTrendHistory = sharePriceHistoryRepositoryCustom.getRecentTrendHistory(ticker);
 
-            // 현재가 추이가 4회 연속 감소일 경우 매수
+            // 현재가 추이가 2회 연속 감소일 경우 매수
             isBuySignal = recentPriceTrendHistory.stream().allMatch(
                     h -> PriceTrendType.DECREASE.equals(h.getPriceTrendType())
             );

@@ -52,30 +52,17 @@ public class SocketTestService {
      * @return socketKey
      */
     public String issueSocketKey(String accountId) {
-
-        String socketKey;
-
         Optional<KisAccount> optionalAccount = kisAccountRepository.findById(accountId);
 
-        if (optionalAccount.isPresent() && !optionalAccount.get().isRetired()) {
-            KisAccount account = optionalAccount.get();
-            log.info("[Socket key 발급 - 발급 불필요] 발급 시간: {}, 만료 시간: {}", account.getModDate(), account.getExpirationTime());
-
-            socketKey = account.getSocketKey();
+        if (optionalAccount.isEmpty()) {
+            log.info("[Socket key 발급 - 첫 발급]");
         } else {
-            if (optionalAccount.isEmpty()) {
-                log.info("[Socket key 발급 - 첫 발급]");
-            } else {
-                KisAccount account = optionalAccount.get();
-
-                log.info("[Socket key 발급 - 재 발급] 발급 시간: {}, 만료 시간: {}", account.getModDate(), account.getExpirationTime());
-            }
-
-            // 소켓키 발급
-            socketKey = kisOauthService.oauthSocket().getApproval_key();
+            KisAccount account = optionalAccount.get();
+            log.info("[Socket key 발급 - 재발급] 발급 시간: {}, 만료 시간: {}", account.getModDate(), account.getExpirationTime());
         }
 
-        return socketKey;
+        // 소켓키 발급
+        return kisOauthService.oauthSocket().getApproval_key();
     }
 
     /**

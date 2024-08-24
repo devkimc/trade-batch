@@ -43,10 +43,10 @@ public class KisAccount {
 
     /**
      * 소켓키 만료 시간 조회
-     * 만료시간: 매일 자정
+     * 만료시간: 24시간 뒤
      * @return
      */
     public LocalDateTime getExpirationTime() {
-        return LocalDateTime.now().toLocalDate().atStartOfDay();
+        return LocalDateTime.now().plusDays(1);
     }
 }
