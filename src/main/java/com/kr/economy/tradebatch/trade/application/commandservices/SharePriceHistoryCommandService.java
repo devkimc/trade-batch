@@ -4,6 +4,7 @@ import com.kr.economy.tradebatch.trade.domain.model.aggregates.SharePriceHistory
 import com.kr.economy.tradebatch.trade.domain.repositories.SharePriceHistoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,5 +39,12 @@ public class SharePriceHistoryCommandService {
                     sharePriceHistoryRepository.save(initialSharePriceHistory);
                 }
         );
+    }
+
+    /**
+     * 현재가 내역 초기화
+     */
+    public void deleteHistory() {
+        sharePriceHistoryRepository.deleteAll();
     }
 }

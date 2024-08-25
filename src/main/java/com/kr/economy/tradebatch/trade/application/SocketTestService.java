@@ -3,6 +3,9 @@ package com.kr.economy.tradebatch.trade.application;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kr.economy.tradebatch.config.WebsocketClientEndpoint;
+import com.kr.economy.tradebatch.trade.application.commandservices.BidAskBalanceCommandService;
+import com.kr.economy.tradebatch.trade.application.commandservices.SharePriceHistoryCommandService;
+import com.kr.economy.tradebatch.trade.application.commandservices.TradingHistoryCommandService;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.KisAccount;
 import com.kr.economy.tradebatch.trade.domain.repositories.KisAccountRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +39,9 @@ public class SocketTestService {
     private final ObjectMapper objectMapper;
     private final KisOauthService kisOauthService;
     private final KisAccountRepository kisAccountRepository;
-    private final KisQuoteService kisQuoteService;
+    private final SharePriceHistoryCommandService sharePriceHistoryCommandService;
+    private final BidAskBalanceCommandService bidAskBalanceCommandService;
+    private final TradingHistoryCommandService tradingHistoryCommandService;
 
 //    @Value("${endpoint.kis.trade.socket.host}")
 //    private String socketHost;
@@ -117,6 +122,12 @@ public class SocketTestService {
     public String test() {
         // https://stackoverflow.com/questions/26452903/javax-websocket-client-simple-example 1번
         try {
+            // init history
+            sharePriceHistoryCommandService.deleteHistory();
+            bidAskBalanceCommandService.deleteHistory();
+            tradingHistoryCommandService.deleteHistory();
+            log.info("내역 데이터 초기화 완료");
+
             // open websocket
             final WebsocketClientEndpoint clientEndPoint = new WebsocketClientEndpoint();
 
@@ -125,9 +136,10 @@ public class SocketTestService {
 
             // wait 5 seconds for messages from websocket
             Thread.sleep(5000);
-
         } catch (InterruptedException ex) {
             System.err.println("InterruptedException exception: " + ex.getMessage());
+        } catch (RuntimeException re) {
+            System.err.println("RuntimeException exception: " + re.getMessage());
         }
 
         return "";

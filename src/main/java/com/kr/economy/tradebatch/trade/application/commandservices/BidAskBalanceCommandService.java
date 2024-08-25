@@ -41,4 +41,11 @@ public class BidAskBalanceCommandService {
                 }
         );
     }
+
+    /**
+     * 매수 매도 잔량비 내역 초기화
+     */
+    public void deleteHistory() {
+        bidAskBalanceRatioHistoryRepository.deleteAll();
+    }
 }

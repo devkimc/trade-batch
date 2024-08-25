@@ -19,7 +19,6 @@ import java.util.List;
 @Slf4j
 public class KoreaStockOrderQueryService {
 
-    private final SharePriceHistoryRepository sharePriceHistoryRepository;
     private final SharePriceHistoryRepositoryCustom sharePriceHistoryRepositoryCustom;
     private final BidAskBalanceRatioHistoryCustomRepository bidAskBalanceRatioHistoryCustomRepository;
 
@@ -31,7 +30,6 @@ public class KoreaStockOrderQueryService {
     @Transactional
     public boolean getBuySignal(String ticker) {
         boolean isBuySignal;
-        SharePriceHistory lastPriceTrendHistory;
 
         try {
             // 최근 매수 추이 이력 조회
@@ -62,14 +60,9 @@ public class KoreaStockOrderQueryService {
                 return false;
             }
 
-            lastPriceTrendHistory = recentPriceTrendHistory.get(0);
-
         } catch (RuntimeException re) {
             throw new RuntimeException("[매수 신호 조회 실패]: {}", re);
         }
-
-        lastPriceTrendHistory.setBuySign();
-        sharePriceHistoryRepository.save(lastPriceTrendHistory);
 
         return true;
     }

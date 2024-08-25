@@ -66,4 +66,25 @@ public class TradingHistory {
     @Column(name = "crt_dtm")
     @CreatedDate
     private LocalDateTime createdDate;      // 등록 시간
+
+    /**
+     * 매도 신호 여부
+     * @param sharePrice
+     * @return
+     */
+    public boolean isSellSignal(int sharePrice) {
+        boolean isHighPoint = sharePrice >= tradingPrice + 300;
+        boolean isLowPoint = sharePrice <= tradingPrice - 600;
+        boolean isClosingTime = LocalDateTime.now().getHour() == 3 && LocalDateTime.now().getMinute() == 29;
+
+        return isHighPoint || isLowPoint || isClosingTime;
+    }
+
+    /**
+     * 매수 체결 여부
+     * @return
+     */
+    public boolean isBuyTrade() {
+        return OrderDvsnCode.BUY.equals(orderDvsnCode);
+    }
 }

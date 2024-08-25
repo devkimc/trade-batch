@@ -19,15 +19,12 @@ public class TradingHistoryRepositoryCustomImpl extends QuerydslRepositorySuppor
         this.jpaQueryFactory = jpaQueryFactory;
     }
 
-    // TODO: 오늘 날짜만 조회하도록 하는 조건 추가되어야 함
     @Override
     public Optional<TradingHistory> getLastTradingHistory(String ticker) {
         return Optional.ofNullable(
                 jpaQueryFactory
                         .selectFrom(tradingHistory)
-                        .where(
-                                tradingHistory.ticker.eq(ticker)
-                        )
+                        .where(tradingHistory.ticker.eq(ticker))
                         .orderBy(tradingHistory.Id.desc())
                         .fetchFirst()
         );

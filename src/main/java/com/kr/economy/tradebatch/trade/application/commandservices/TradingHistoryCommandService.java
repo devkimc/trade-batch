@@ -35,4 +35,11 @@ public class TradingHistoryCommandService {
                 .build();
         tradingHistoryRepository.save(tradingHistory);
     }
+
+    /**
+     * 체결 내역 초기화
+     */
+    public void deleteHistory() {
+        tradingHistoryRepository.deleteAll();
+    }
 }

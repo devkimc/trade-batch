@@ -14,6 +14,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
+// TODO 지금 당장은 주문 내역이 필요하지 않은 것을 보임, 추후에 다른 사용자도 이용할 경우 필요하지 않을가?
 @Table(name = "orders")
 @Entity
 @Getter

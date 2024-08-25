@@ -44,8 +44,6 @@ public class SamsungStockTradeJobConfig {
     @Bean
     @JobScope
     public Tasklet readListTasklet() {
-        System.out.println("called tasklet!");
-
         socketTestService.test();
 
         return (contribution, chunkContext) -> {
