@@ -42,6 +42,7 @@ public class SocketTestService {
     private final SharePriceHistoryCommandService sharePriceHistoryCommandService;
     private final BidAskBalanceCommandService bidAskBalanceCommandService;
     private final TradingHistoryCommandService tradingHistoryCommandService;
+    private final SocketProcessService socketProcessService;
 
 //    @Value("${endpoint.kis.trade.socket.host}")
 //    private String socketHost;
@@ -129,7 +130,7 @@ public class SocketTestService {
             log.info("내역 데이터 초기화 완료");
 
             // open websocket
-            final WebsocketClientEndpoint clientEndPoint = new WebsocketClientEndpoint();
+            final WebsocketClientEndpoint clientEndPoint = new WebsocketClientEndpoint(socketProcessService);
 
             // send message to websocket
             clientEndPoint.sendMessage(getRealTimeInfo(TR_ID_H0STCNT0));
