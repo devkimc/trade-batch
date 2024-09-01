@@ -26,6 +26,9 @@ public class KisAccount {
     private String socketKey;
 
     @Column
+    private String accessToken;
+
+    @Column
     @CreatedDate
     private LocalDateTime regDate;
 

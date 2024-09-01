@@ -34,10 +34,18 @@ public class KisOauthService {
                 .appkey(appKey)
                 .appsecret(secretKey)
                 .build();
+        log.info("[Oauth 토큰 발급] {}", oauthTokenReqDto);
 
-        log.info("[토큰 발급] {}", oauthTokenReqDto);
+        OauthTokenResDto oauthTokenResDto = kisOauthClient.oauthToken(oauthTokenReqDto);
+        log.info("[Oauth 토큰 발급] 결과: {}", oauthTokenResDto);
 
-        return null;
+        KisAccount kisAccount = KisAccount.builder()
+                .accountId("DEVKIMC")
+                .accessToken(oauthTokenResDto.getAccess_token())
+                .build();
+        kisAccountRepository.save(kisAccount);
+
+        return oauthTokenResDto;
     }
 
     /**

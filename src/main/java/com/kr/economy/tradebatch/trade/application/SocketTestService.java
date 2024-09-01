@@ -123,6 +123,9 @@ public class SocketTestService {
     public String test() {
         // https://stackoverflow.com/questions/26452903/javax-websocket-client-simple-example 1번
         try {
+            // oauthToken
+            kisOauthService.oauthToken();
+
             // init history
             sharePriceHistoryCommandService.deleteHistory();
             bidAskBalanceCommandService.deleteHistory();

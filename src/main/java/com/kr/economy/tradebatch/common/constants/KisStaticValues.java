@@ -11,6 +11,18 @@ public class KisStaticValues {
     // 거래 ID: [모의투자] 실시간 주식 체결통보
     public static final String TR_ID_H0STCNI9 = "H0STCNI9";
 
+    // 거래 ID: [모의투자] 주식 현금 매수 주문
+    public static final String TR_ID_VTTC0802U = "VTTC0802U";
+
+    // 거래 ID: [모의투자] 주식 현금 매도 주문
+    public static final String TR_ID_VTTC0801U = "VTTC0801U";
+
+    // 거래 ID: [실전투자] 주식 현금 매수 주문
+    public static final String TR_ID_TTTC0802U = "TTTC0802U";
+
+    // 거래 ID: [실전투자] 주식 현금 매도 주문
+    public static final String TR_ID_TTTC0801U = "TTTC0801U";
+
     /* 종목 코드 */
     public static final String TICKER_SAMSUNG = "005930";
 

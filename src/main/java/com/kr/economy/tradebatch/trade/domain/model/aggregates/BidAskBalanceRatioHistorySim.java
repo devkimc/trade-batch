@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @ToString
 @EntityListeners(AuditingEntityListener.class)
 @Slf4j
-public class BidAskBalanceRatioHistory {
+public class BidAskBalanceRatioHistorySim {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,11 +44,10 @@ public class BidAskBalanceRatioHistory {
      *
      * @param bidAskBalanceRatio
      */
-    public BidAskBalanceRatioHistory(String ticker, Float bidAskBalanceRatio, String tradingTime) {
+    public BidAskBalanceRatioHistorySim(String ticker, Float bidAskBalanceRatio) {
         this.ticker = ticker;
         this.bidAskBalanceRatio = bidAskBalanceRatio;
         this.bidAskBalanceTrendType = BidAskBalanceTrendType.NONE;
-        this.tradingTime = tradingTime;
     }
 
     public BidAskBalanceTrendType getNextBalanceTrendType(Float nextBidAskBalanceRatio) {

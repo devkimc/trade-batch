@@ -35,7 +35,7 @@ public class SharePriceHistoryCommandService {
                             .build();
                     sharePriceHistoryRepository.save(sharePriceHistory);
                 }, () -> {
-                    SharePriceHistory initialSharePriceHistory = new SharePriceHistory(ticker, sharePrice);
+                    SharePriceHistory initialSharePriceHistory = new SharePriceHistory(ticker, sharePrice, tradingTime);
                     sharePriceHistoryRepository.save(initialSharePriceHistory);
                 }
         );

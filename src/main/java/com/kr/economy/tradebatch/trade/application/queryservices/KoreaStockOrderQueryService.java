@@ -60,6 +60,13 @@ public class KoreaStockOrderQueryService {
                 return false;
             }
 
+            // 현재가 추이가 2회 연속 감소이지만, 그 사이에 동결인 데이터가 10건 미만인 경우 매수
+            long idGap = recentPriceTrendHistory.get(0).getId() - recentPriceTrendHistory.get(1).getId();
+
+            if (idGap >= 11) {
+                return false;
+            }
+
         } catch (RuntimeException re) {
             throw new RuntimeException("[매수 신호 조회 실패]: {}", re);
         }

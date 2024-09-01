@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @ToString
 @EntityListeners(AuditingEntityListener.class)
 @Slf4j
-public class SharePriceHistory {
+public class SharePriceHistorySim {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,11 +51,10 @@ public class SharePriceHistory {
      * 초기 값
      * @param
      */
-    public SharePriceHistory(String ticker, int sharePrice, String tradingTime) {
+    public SharePriceHistorySim(String ticker, int sharePrice) {
         this.ticker = ticker;
         this.sharePrice = sharePrice;
         this.priceTrendType = PriceTrendType.NONE;
-        this.tradingTime = tradingTime;
     }
 
 

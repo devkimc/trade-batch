@@ -20,7 +20,7 @@ public class BidAskBalanceCommandService {
      * 매수매도잔량비 이력 등록
      * @param nextBidAskBalanceRatio
      */
-    public void createBidAskBalanceRatioHistory(String ticker, Float nextBidAskBalanceRatio) {
+    public void createBidAskBalanceRatioHistory(String ticker, Float nextBidAskBalanceRatio, String tradingTime) {
 
         // 1. 마지막 이력 조회
         Optional<BidAskBalanceRatioHistory> optionalLastBalanceRatio = bidAskBalanceRatioHistoryRepository.findTopByTickerOrderByCreatedDateDesc(ticker);
@@ -32,12 +32,13 @@ public class BidAskBalanceCommandService {
                             .ticker(ticker)
                             .bidAskBalanceRatio(nextBidAskBalanceRatio)
                             .bidAskBalanceTrendType(present.getNextBalanceTrendType(nextBidAskBalanceRatio))
+                            .tradingTime(tradingTime)
                             .build();
 
                     bidAskBalanceRatioHistoryRepository.save(nextBidAskBalanceHistory);
                 },
                 () -> {
-                    bidAskBalanceRatioHistoryRepository.save(new BidAskBalanceRatioHistory(ticker, nextBidAskBalanceRatio));
+                    bidAskBalanceRatioHistoryRepository.save(new BidAskBalanceRatioHistory(ticker, nextBidAskBalanceRatio, tradingTime));
                 }
         );
     }
