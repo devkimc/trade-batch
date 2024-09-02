@@ -25,7 +25,7 @@ public class KisAccount {
     @Column
     private String socketKey;
 
-    @Column
+    @Column(length = 1000)
     private String accessToken;
 
     @Column
@@ -36,20 +36,11 @@ public class KisAccount {
     @LastModifiedDate
     private LocalDateTime modDate;
 
-    /**
-     * 소켓키 만료 유무 확인
-     * @return
-     */
-    public boolean isRetired() {
-        return modDate.isBefore(getExpirationTime());
+    public void renewAccessToken(String accessToken) {
+        this.accessToken = accessToken;
     }
 
-    /**
-     * 소켓키 만료 시간 조회
-     * 만료시간: 24시간 뒤
-     * @return
-     */
-    public LocalDateTime getExpirationTime() {
-        return LocalDateTime.now().plusDays(1);
+    public void renewSocketKey(String socketKey) {
+        this.socketKey = socketKey;
     }
 }

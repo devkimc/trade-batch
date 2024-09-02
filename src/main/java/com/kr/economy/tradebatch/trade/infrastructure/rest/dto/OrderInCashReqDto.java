@@ -15,5 +15,4 @@ public class OrderInCashReqDto {
     private String ORD_DVSN;        // 주문 구분
     private String ORD_QTY;         // 주문 수량
     private String ORD_UNPR;        // 주문 단가
-    private String ALGO_NO;         // 알고리즘 번호 (미사용)
 }

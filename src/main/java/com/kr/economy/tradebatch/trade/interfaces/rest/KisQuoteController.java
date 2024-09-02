@@ -1,14 +1,11 @@
 package com.kr.economy.tradebatch.trade.interfaces.rest;
 
-import com.kr.economy.tradebatch.trade.application.KisOauthService;
-import com.kr.economy.tradebatch.trade.application.KisQuoteService;
 import com.kr.economy.tradebatch.trade.application.SocketTestService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class KisQuoteController {
 
-    private final KisQuoteService kisQuoteService;
     private final SocketTestService socketTestService;
 
     @GetMapping("/test")

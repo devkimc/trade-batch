@@ -1,13 +1,16 @@
 package com.kr.economy.tradebatch.trade.application;
 
+import com.kr.economy.tradebatch.common.util.KisUtil;
 import com.kr.economy.tradebatch.trade.application.commandservices.BidAskBalanceCommandService;
 import com.kr.economy.tradebatch.trade.application.commandservices.SharePriceHistoryCommandService;
 import com.kr.economy.tradebatch.trade.application.commandservices.TradingHistoryCommandService;
+import com.kr.economy.tradebatch.trade.application.queryservices.KisAccountQueryService;
 import com.kr.economy.tradebatch.trade.application.queryservices.KoreaStockOrderQueryService;
 import com.kr.economy.tradebatch.trade.application.queryservices.TradingHistoryQueryService;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.TradingHistory;
 import com.kr.economy.tradebatch.trade.infrastructure.rest.DomesticStockOrderClient;
 import com.kr.economy.tradebatch.trade.infrastructure.rest.dto.OrderInCashReqDto;
+import com.kr.economy.tradebatch.trade.infrastructure.rest.dto.OrderInCashResDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +34,9 @@ public class SocketProcessService {
     @Value("${credential.kis.trade.secret-key}")
     private String secretKey;
 
+    @Value("${credential.kis.trade.secret-key}")
+    private String accountNo;
+
     @Value("${spring.profiles.active}")
     private String activeProfile;
 
@@ -40,6 +46,7 @@ public class SocketProcessService {
     private final TradingHistoryQueryService tradingHistoryQueryService;
     private final KoreaStockOrderQueryService koreaStockOrderQueryService;
     private final DomesticStockOrderClient domesticStockOrderClient;
+    private final KisAccountQueryService kisAccountQueryService;
 
     public void socketProcess(String message) {
         if (message == null || message.length() < 2) {
@@ -87,27 +94,53 @@ public class SocketProcessService {
             // 마지막 체결 내역이 매수일 경우에만 매도
             if (lastTradingHistory.isPresent() && lastTradingHistory.get().isBuyTrade()) {
                 if (lastTradingHistory.get().isSellSignal(sharePrice)) {
+                    String accessToken = kisAccountQueryService.getKisAccount("DEVKIMC").getAccessToken();
+                    log.info("[매도 주문] Oauth 토큰 : {}", accessToken);
 
-                    domesticStockOrderClient.orderInCash(
+                    OrderInCashReqDto orderInCashReqDto = OrderInCashReqDto.builder()
+                            .CANO(KisUtil.getCano(accountNo))
+                            .ACNT_PRDT_CD(KisUtil.getAcntPrdtCd(accountNo))
+                            .PDNO(TICKER_SAMSUNG)
+                            .ORD_DVSN("01")
+                            .ORD_QTY("10")
+                            .ORD_UNPR("0")  // 시장가일 경우 0
+                            .build();
+                    log.info("[매도 주문] 요청: {}", orderInCashReqDto);
+
+                    OrderInCashResDto orderInCashResDto = domesticStockOrderClient.orderInCash(
                             "application/json; charset=utf-8",
-                            "authorization",
+                            accessToken,
                             appKey,
                             secretKey,
-                            "local".equals(activeProfile) || "dev".equals(activeProfile) ? TR_ID_VTTC0801U : TR_ID_TTTC0801U,
-                            OrderInCashReqDto.builder().build()
+                            "prod".equals(activeProfile) ? TR_ID_TTTC0801U : TR_ID_VTTC0801U,
+                            orderInCashReqDto
                     );
+                    log.info("[매도 주문] 응답: {}", orderInCashResDto);
                 }
             } else {
                 if (koreaStockOrderQueryService.getBuySignal(TICKER_SAMSUNG)) {
+                    String accessToken = kisAccountQueryService.getKisAccount("DEVKIMC").getAccessToken();
+                    log.info("[매수 주문] Oauth 토큰 : {}", accessToken);
 
-                    domesticStockOrderClient.orderInCash(
+                    OrderInCashReqDto orderInCashReqDto = OrderInCashReqDto.builder()
+                            .CANO(KisUtil.getCano(accountNo))
+                            .ACNT_PRDT_CD(KisUtil.getAcntPrdtCd(accountNo))
+                            .PDNO(TICKER_SAMSUNG)
+                            .ORD_DVSN("01")
+                            .ORD_QTY("10")
+                            .ORD_UNPR("0")  // 시장가일 경우 0
+                            .build();
+                    log.info("[매수 주문] 요청: {}", orderInCashReqDto);
+
+                    OrderInCashResDto orderInCashResDto = domesticStockOrderClient.orderInCash(
                             "application/json; charset=utf-8",
-                            "authorization",
+                            accessToken,
                             appKey,
                             secretKey,
-                            "local".equals(activeProfile) || "dev".equals(activeProfile) ? TR_ID_VTTC0802U : TR_ID_TTTC0802U,
-                            OrderInCashReqDto.builder().build()
+                            "prod".equals(activeProfile) ? TR_ID_TTTC0802U : TR_ID_VTTC0802U,
+                            orderInCashReqDto
                     );
+                    log.info("[매수 주문] 응답: {}", orderInCashResDto);
                 }
             }
         } catch (DataAccessException dae) {
@@ -128,20 +161,20 @@ public class SocketProcessService {
 
         log.info("[Socket response temporary check] message : " + message);
 
-        String kisId = result[0];
-        String kisOrderId = result[2];
-        String kisOrOrderID = result[3];
-        String orderDvsnCode = result[4];
-        String kisOrderDvsnCode = result[6];
-        String ticker = result[8];
-        String tradingQty = result[9];
-        String tradingPrice = result[10];
-        String tradingTime = result[11];
-        String refuseCode = result[12];
-        String tradeResultCode = result[13];
-        String tradingResultType = "0".equals(refuseCode) && "1".equals(tradeResultCode) ? "0" : "1";
-
         try {
+            String kisId = result[0];
+            String kisOrderId = result[2];
+            String kisOrOrderID = result[3];
+            String orderDvsnCode = result[4];
+            String kisOrderDvsnCode = result[6];
+            String ticker = result[8];
+            String tradingQty = result[9];
+            String tradingPrice = result[10];
+            String tradingTime = result[11];
+            String refuseCode = result[12];
+            String tradeResultCode = result[13];
+            String tradingResultType = "0".equals(refuseCode) && "1".equals(tradeResultCode) ? "0" : "1";
+
             CreateTradingHistoryCommand createTradingHistoryCommand = CreateTradingHistoryCommand.builder()
                     .ticker(ticker)
                     .orderDvsnCode(orderDvsnCode)

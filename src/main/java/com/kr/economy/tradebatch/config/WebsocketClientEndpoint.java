@@ -4,7 +4,6 @@ import com.kr.economy.tradebatch.trade.application.SocketProcessService;
 import jakarta.websocket.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -19,22 +18,22 @@ import java.nio.ByteBuffer;
 @ClientEndpoint
 public class WebsocketClientEndpoint {
 
-    @Value("${endpoint.kis.trade.socket.host}")
-    private String socketUrl;
     private final SocketProcessService socketProcessService;
 
     Session userSession = null;
 
     @Autowired
-    public WebsocketClientEndpoint(
-            SocketProcessService socketProcessService) {
+    public WebsocketClientEndpoint(SocketProcessService socketProcessService) {
         try {
             this.socketProcessService = socketProcessService;
 
             WebSocketContainer container = ContainerProvider.getWebSocketContainer();
             container.setDefaultMaxBinaryMessageBufferSize(65536);
             container.setDefaultMaxTextMessageBufferSize(65536);
-            container.connectToServer(this, new URI("ws://ops.koreainvestment.com:21000"));
+
+            // 31000: 모의
+            // 21000: 실전
+            container.connectToServer(this, new URI("ws://ops.koreainvestment.com:31000"));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

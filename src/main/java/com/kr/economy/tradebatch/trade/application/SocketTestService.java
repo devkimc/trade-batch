@@ -6,6 +6,7 @@ import com.kr.economy.tradebatch.config.WebsocketClientEndpoint;
 import com.kr.economy.tradebatch.trade.application.commandservices.BidAskBalanceCommandService;
 import com.kr.economy.tradebatch.trade.application.commandservices.SharePriceHistoryCommandService;
 import com.kr.economy.tradebatch.trade.application.commandservices.TradingHistoryCommandService;
+import com.kr.economy.tradebatch.trade.application.queryservices.KisAccountQueryService;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.KisAccount;
 import com.kr.economy.tradebatch.trade.domain.repositories.KisAccountRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,15 +28,6 @@ public class SocketTestService {
 
     private final String TEST_ID = "DEVKIMC";
 
-    @Value("${credential.kis.trade.app-key}")
-    private String appKey;
-
-    @Value("${credential.kis.trade.secret-key}")
-    private String secretKey;
-
-    @Value("${endpoint.kis.trade.socket.host}")
-    private String socketUrl;
-
     private final ObjectMapper objectMapper;
     private final KisOauthService kisOauthService;
     private final KisAccountRepository kisAccountRepository;
@@ -43,33 +35,7 @@ public class SocketTestService {
     private final BidAskBalanceCommandService bidAskBalanceCommandService;
     private final TradingHistoryCommandService tradingHistoryCommandService;
     private final SocketProcessService socketProcessService;
-
-//    @Value("${endpoint.kis.trade.socket.host}")
-//    private String socketHost;
-//
-//    @Value("${endpoint.kis.trade.socket.port}")
-//    private int socketPort;
-
-    /**
-     * 소켓키 발급
-     *      1. 소켓키 발급 내역이 존재하지 않은 경우
-     *      2. 소켓키가 만료되지 않은 경우
-     * @param accountId
-     * @return socketKey
-     */
-    public String issueSocketKey(String accountId) {
-        Optional<KisAccount> optionalAccount = kisAccountRepository.findById(accountId);
-
-        if (optionalAccount.isEmpty()) {
-            log.info("[Socket key 발급 - 첫 발급]");
-        } else {
-            KisAccount account = optionalAccount.get();
-            log.info("[Socket key 발급 - 재발급] 발급 시간: {}, 만료 시간: {}", account.getModDate(), account.getExpirationTime());
-        }
-
-        // 소켓키 발급
-        return kisOauthService.oauthSocket().getApproval_key();
-    }
+    private final KisAccountQueryService kisAccountQueryService;
 
     /**
      * 실시간 정보 조회
@@ -79,9 +45,9 @@ public class SocketTestService {
         String jsonRequest;
 
         try {
-            String socketKey = issueSocketKey(TEST_ID);
+            KisAccount kisAccount = kisAccountQueryService.getKisAccount(TEST_ID);
 
-            Map<String, Object> reqMap = getQuoteReqMap(tradeId, socketKey);
+            Map<String, Object> reqMap = getQuoteReqMap(tradeId, kisAccount.getSocketKey());
             jsonRequest = objectMapper.writeValueAsString(reqMap);
         } catch (JsonProcessingException e) {
             log.error("[실시간 호가 조회 요청 데이터 생성 에러] {}", e);
@@ -123,9 +89,6 @@ public class SocketTestService {
     public String test() {
         // https://stackoverflow.com/questions/26452903/javax-websocket-client-simple-example 1번
         try {
-            // oauthToken
-            kisOauthService.oauthToken();
-
             // init history
             sharePriceHistoryCommandService.deleteHistory();
             bidAskBalanceCommandService.deleteHistory();
@@ -135,11 +98,14 @@ public class SocketTestService {
             // open websocket
             final WebsocketClientEndpoint clientEndPoint = new WebsocketClientEndpoint(socketProcessService);
 
-            // send message to websocket
+            // send message to websocket 체결가
             clientEndPoint.sendMessage(getRealTimeInfo(TR_ID_H0STCNT0));
 
             // wait 5 seconds for messages from websocket
             Thread.sleep(5000);
+
+            // send message to websocket 체결 통보
+            clientEndPoint.sendMessage(getRealTimeInfo(TR_ID_H0STCNI9));
         } catch (InterruptedException ex) {
             System.err.println("InterruptedException exception: " + ex.getMessage());
         } catch (RuntimeException re) {

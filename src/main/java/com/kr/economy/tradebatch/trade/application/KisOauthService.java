@@ -12,6 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -28,7 +31,13 @@ public class KisOauthService {
     @Value("${credential.kis.trade.secret-key}")
     private String secretKey;
 
-    public OauthTokenResDto oauthToken() {
+    public String oauthToken(String accountId) {
+        String initialAccessToken = kisAccountRepository.findById(accountId).get().getAccessToken();
+
+        if (StringUtils.hasText(initialAccessToken)) {
+            return initialAccessToken;
+        }
+
         OauthTokenReqDto oauthTokenReqDto = OauthTokenReqDto.builder()
                 .grant_type("client_credentials")
                 .appkey(appKey)
@@ -37,15 +46,15 @@ public class KisOauthService {
         log.info("[Oauth 토큰 발급] {}", oauthTokenReqDto);
 
         OauthTokenResDto oauthTokenResDto = kisOauthClient.oauthToken(oauthTokenReqDto);
-        log.info("[Oauth 토큰 발급] 결과: {}", oauthTokenResDto);
 
-        KisAccount kisAccount = KisAccount.builder()
-                .accountId("DEVKIMC")
-                .accessToken(oauthTokenResDto.getAccess_token())
-                .build();
-        kisAccountRepository.save(kisAccount);
+        KisAccount account = kisAccountRepository.findById(accountId).get();
 
-        return oauthTokenResDto;
+        account.renewAccessToken(oauthTokenResDto.getAccess_token());
+
+        KisAccount savedAccount = kisAccountRepository.saveAndFlush(account);
+        log.info("[회원 정보] 결과: {}", savedAccount);
+
+        return savedAccount.getAccessToken();
     }
 
     /**
@@ -54,7 +63,7 @@ public class KisOauthService {
      * 내부 정책 만료 기준: 발급일까지 유지 (23:59)
      * @return
      */
-    public OauthSocketResDto oauthSocket() {
+    public OauthSocketResDto oauthSocket(String accountId) {
         OauthSocketReqDto oauthSocketReqDto = OauthSocketReqDto.builder()
                 .grant_type("client_credentials")
                 .appkey(appKey)
@@ -70,14 +79,12 @@ public class KisOauthService {
             log.error("[웹소켓 접속키 발급] 실패 appKey: {}", appKey);
             return null;
         }
+        KisAccount account = kisAccountRepository.findById(accountId).get();
 
-        log.info("[웹소켓 접속키 발급] 결과: {}", oauthSocketResDto);
+        account.renewSocketKey(oauthSocketResDto.getApproval_key());
 
-        KisAccount account = KisAccount.builder()
-                .accountId("DEVKIMC")
-                .socketKey(oauthSocketResDto.getApproval_key())
-                .build();
-        kisAccountRepository.save(account);
+        KisAccount savedAccount = kisAccountRepository.saveAndFlush(account);
+        log.info("[회원 정보] 결과: {}", savedAccount);
 
         return oauthSocketResDto;
     }
