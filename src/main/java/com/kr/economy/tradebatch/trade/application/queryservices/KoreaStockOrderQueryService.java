@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -35,7 +36,7 @@ public class KoreaStockOrderQueryService {
             // 최근 매수 추이 이력 조회
             List<BidAskBalanceRatioHistory> recentHistoryByBidAskBalance = bidAskBalanceRatioHistoryCustomRepository.getRecentHistoryByBidAskBalance(ticker);
 
-            if (recentHistoryByBidAskBalance.size() < 3) {
+            if (recentHistoryByBidAskBalance.size() < 4) {
                 log.info("데이터 부족");
                 return false;
             }
@@ -60,12 +61,21 @@ public class KoreaStockOrderQueryService {
                 return false;
             }
 
-            // 현재가 추이가 2회 연속 감소이지만, 그 사이에 동결인 데이터가 10건 미만인 경우 매수
-            long idGap = recentPriceTrendHistory.get(0).getId() - recentPriceTrendHistory.get(1).getId();
+            // 오후 15시 25분 이전일 경우
+            LocalDateTime now = LocalDateTime.now();
+            boolean isClosingTime = now.getHour() == 15 && now.getMinute() >= 25;
 
-            if (idGap >= 11) {
+            if (isClosingTime) {
                 return false;
             }
+
+            // 현재가 추이가 2회 연속 감소이지만, 그 사이에 동결인 데이터가 30건 미만인 경우 매수
+            // TODO 테스트 후 주석 제거
+//            long idGap = recentPriceTrendHistory.get(0).getId() - recentPriceTrendHistory.get(1).getId();
+//
+//            if (idGap >= 30) {
+//                return false;
+//            }
 
         } catch (RuntimeException re) {
             throw new RuntimeException("[매수 신호 조회 실패]: {}", re);

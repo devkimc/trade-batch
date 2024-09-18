@@ -1,4 +1,4 @@
-package com.kr.economy.tradebatch.trade.interfaces.rest;
+package com.kr.economy.tradebatch.trade.infrastructure.rest.interfaces.rest;
 
 import com.kr.economy.tradebatch.trade.application.SocketTestService;
 import lombok.RequiredArgsConstructor;

@@ -2,7 +2,6 @@ package com.kr.economy.tradebatch.trade.application;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kr.economy.tradebatch.config.WebsocketClientEndpoint;
 import com.kr.economy.tradebatch.trade.application.commandservices.BidAskBalanceCommandService;
 import com.kr.economy.tradebatch.trade.application.commandservices.SharePriceHistoryCommandService;
 import com.kr.economy.tradebatch.trade.application.commandservices.TradingHistoryCommandService;

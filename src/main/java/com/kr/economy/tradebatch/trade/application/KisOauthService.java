@@ -32,12 +32,6 @@ public class KisOauthService {
     private String secretKey;
 
     public String oauthToken(String accountId) {
-        String initialAccessToken = kisAccountRepository.findById(accountId).get().getAccessToken();
-
-        if (StringUtils.hasText(initialAccessToken)) {
-            return initialAccessToken;
-        }
-
         OauthTokenReqDto oauthTokenReqDto = OauthTokenReqDto.builder()
                 .grant_type("client_credentials")
                 .appkey(appKey)

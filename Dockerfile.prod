@@ -1,0 +1,5 @@
+FROM openjdk:17.0.2-slim
+ARG JAR_FILE=build/libs/trade-batch-0.0.1-SNAPSHOT.jar
+COPY ${JAR_FILE} trade-batch.jar
+EXPOSE 9090
+ENTRYPOINT ["java","-Dspring.profiles.active=prod","-jar","trade-batch.jar"]

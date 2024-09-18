@@ -11,12 +11,14 @@ import static com.kr.economy.tradebatch.common.constants.StaticValues.*;
 import static com.kr.economy.tradebatch.common.constants.Url.*;
 
 
-@FeignClient(name = "DomesticStockOrder", url="${endpoint.kis.trade.host}", configuration = OpenFeignConfig.class,
-        fallback = DomesticStockOrderClientFallback.class)
+@FeignClient(name = "DomesticStockOrder", url = "${endpoint.kis.trade.host}",
+        fallback = DomesticStockOrderClientFallback.class,
+        configuration = OpenFeignConfig.class)
 public interface DomesticStockOrderClient {
 
     /**
      * 주식주문(현금)[v1_국내주식-001]
+     *
      * @param contentType
      * @param authorization
      * @param appKey
@@ -25,12 +27,13 @@ public interface DomesticStockOrderClient {
      * @param orderInCashReqDto
      * @return
      */
-    @PostMapping(ORDER_IN_CASH_URL)
+    @PostMapping(value = ORDER_IN_CASH_URL)
     OrderInCashResDto orderInCash(
-            @RequestHeader(name = HEADER_CONTENT_TYPE, defaultValue = "application/json; charset=utf-8") String contentType,
+            @RequestHeader(HEADER_ACCEPT) String contentType,
             @RequestHeader(HEADER_AUTHORIZATION) String authorization,
             @RequestHeader(HEADER_APP_KEY) String appKey,
             @RequestHeader(HEADER_APP_SECRET) String appSecret,
             @RequestHeader(HEADER_TR_ID) String trId,
+            @RequestHeader("custtype") String custType,
             @RequestBody OrderInCashReqDto orderInCashReqDto);
 }

@@ -91,7 +91,7 @@ public class Order {
      */
     public void updateOrderResult(OrderInCashResDto orderInCashResDto) {
         String resultCode = orderInCashResDto.getRt_cd();
-        String resultMsg = orderInCashResDto.getMsg();
+        String resultMsg = orderInCashResDto.getMsg1();
 
         if ("0".equals(resultCode)) {
             this.orderStatus = OrderStatus.SUCCESS;

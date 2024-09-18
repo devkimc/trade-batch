@@ -11,12 +11,10 @@ import com.kr.economy.tradebatch.trade.domain.model.aggregates.KisAccount;
 import com.kr.economy.tradebatch.trade.domain.repositories.KisAccountRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import static com.kr.economy.tradebatch.common.constants.KisStaticValues.*;
 
@@ -105,7 +103,7 @@ public class SocketTestService {
             Thread.sleep(5000);
 
             // send message to websocket 체결 통보
-            clientEndPoint.sendMessage(getRealTimeInfo(TR_ID_H0STCNI9));
+            clientEndPoint.sendMessage(getRealTimeInfo(TR_ID_H0STCNI0));
         } catch (InterruptedException ex) {
             System.err.println("InterruptedException exception: " + ex.getMessage());
         } catch (RuntimeException re) {

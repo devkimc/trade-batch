@@ -14,7 +14,7 @@ public class OrderInCashResDto {
                                         // 0 : 성공
                                         // 0 이외의 값 : 실패
     private String msg_cd;          // 응답 코드
-    private String msg;             // 메시지
+    private String msg1;            // 메시지
     private List<OutPut> output;    // 응답 상세
 
     @Getter

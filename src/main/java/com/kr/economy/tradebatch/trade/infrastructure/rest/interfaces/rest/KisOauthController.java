@@ -1,4 +1,4 @@
-package com.kr.economy.tradebatch.trade.interfaces.rest;
+package com.kr.economy.tradebatch.trade.infrastructure.rest.interfaces.rest;
 
 import com.kr.economy.tradebatch.trade.application.KisOauthService;
 import lombok.RequiredArgsConstructor;
@@ -14,17 +14,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/kis/oauth")
 @RequiredArgsConstructor
 public class KisOauthController {
-//
-//    private final KisOauthService kisOauthService;
-//
-//    @PostMapping("/token")
-//    public ResponseEntity<Object> oauthToken() {
-//        return new ResponseEntity<>(kisOauthService.oauthToken(), HttpStatus.OK);
-//    }
-//
-//    @PostMapping("/socket")
-//    public ResponseEntity<Object> oauthSocket() {
-//
-//        return new ResponseEntity<>(kisOauthService.oauthSocket(), HttpStatus.OK);
-//    }
+
+    private final KisOauthService kisOauthService;
+
+    @PostMapping("/token")
+    public ResponseEntity<Object> oauthToken() {
+        return new ResponseEntity<>(kisOauthService.oauthToken("DEVKIMC"), HttpStatus.OK);
+    }
+
+    @PostMapping("/socket")
+    public ResponseEntity<Object> oauthSocket() {
+
+        return new ResponseEntity<>(kisOauthService.oauthSocket("DEVKIMC"), HttpStatus.OK);
+    }
 }

@@ -32,7 +32,7 @@ public class OpenFeignConfig {
      */
     @Bean
     Logger.Level feignLoggerLevel() {
-        return Logger.Level.HEADERS;
+        return Logger.Level.FULL;
     }
 
     /**
@@ -41,21 +41,7 @@ public class OpenFeignConfig {
     @Bean
     public RequestInterceptor requestInterceptor() {
         return requestTemplate -> {
-            requestTemplate.header(HEADER_CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-            requestTemplate.header("Accept", MediaType.APPLICATION_JSON_VALUE);
-        };
-    }
-
-    @Bean
-    public ErrorDecoder decoder() {
-        return (methodKey, response) -> {
-
-            String resultCode = SERVER_ERROR.getResCode();
-            String resultMessage = SERVER_ERROR.getResMessage();
-
-            System.out.println("methodKey = " + methodKey);
-//            if(response.headers() != null && response.headers().containsKey())
-            return new RuntimeException(response.toString());
+            System.out.println("requestTemplate = " + requestTemplate);
         };
     }
 

@@ -1,5 +1,6 @@
 package com.kr.economy.tradebatch.trade.infrastructure.rest.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 @Getter
@@ -9,10 +10,21 @@ import lombok.*;
 @ToString
 public class OrderInCashReqDto {
 
-    private String CANO;            // 종합 계좌번호 계좌번호 체계(8-2)의 앞 8자리
-    private String ACNT_PRDT_CD;    // 계좌 상품코드 계좌번호 체계(8-2)의 뒤 2자리
-    private String PDNO;            // 종목 코드 (6자리)
-    private String ORD_DVSN;        // 주문 구분
-    private String ORD_QTY;         // 주문 수량
-    private String ORD_UNPR;        // 주문 단가
+    @JsonProperty("CANO")
+    private String cano;            // 종합 계좌번호 계좌번호 체계(8-2)의 앞 8자리
+
+    @JsonProperty("ACNT_PRDT_CD")
+    private String acntPrdtCd;    // 계좌 상품코드 계좌번호 체계(8-2)의 뒤 2자리
+
+    @JsonProperty("PDNO")
+    private String pdno;            // 종목 코드 (6자리)
+
+    @JsonProperty("ORD_DVSN")
+    private String ordDvsn;        // 주문 구분
+
+    @JsonProperty("ORD_QTY")
+    private String ordQty;         // 주문 수량
+
+    @JsonProperty("ORD_UNPR")
+    private String ordUnpr;        // 주문 단가
 }

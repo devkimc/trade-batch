@@ -2,7 +2,6 @@ package com.kr.economy.tradebatch.trade.domain.model.aggregates;
 
 import com.kr.economy.tradebatch.trade.domain.constants.KisOrderDvsnCode;
 import com.kr.economy.tradebatch.trade.domain.constants.OrderDvsnCode;
-import com.kr.economy.tradebatch.trade.domain.constants.PriceTrendType;
 import com.kr.economy.tradebatch.trade.domain.constants.TradingResultType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -10,7 +9,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Entity
 @Getter
@@ -72,12 +73,43 @@ public class TradingHistory {
      * @param sharePrice
      * @return
      */
-    public boolean isSellSignal(int sharePrice) {
-        boolean isHighPoint = sharePrice >= tradingPrice + 300;
-        boolean isLowPoint = sharePrice <= tradingPrice - 600;
-        boolean isClosingTime = LocalDateTime.now().getHour() == 3 && LocalDateTime.now().getMinute() == 29;
+    public boolean isSellSignal(int sharePrice, String currentTradingTime) {
+        LocalDateTime now = LocalDateTime.now();
 
-        return isHighPoint || isLowPoint || isClosingTime;
+//        String mm = String.valueOf(now.getMonth().getValue());
+//        String dd = String.valueOf(now.getDayOfMonth());
+
+//        if (mm.length() == 1) {
+//            mm = "0" + mm;
+//        }
+//
+//        if (dd.length() == 1) {
+//            dd = "0" + dd;
+//        }
+
+//        LocalDate date = LocalDate.parse(now.getYear() + "-" + mm + "-" + dd);
+//        LocalDateTime tradingLdt = date.atTime(Integer.parseInt(tradingTime.substring(0, 2)), Integer.parseInt(tradingTime.substring(2, 4)), Integer.parseInt(tradingTime.substring(4, 6)));
+//        LocalDateTime currentTradingLdt = date.atTime(Integer.parseInt(currentTradingTime.substring(0, 2)), Integer.parseInt(currentTradingTime.substring(2, 4)), Integer.parseInt(currentTradingTime.substring(4, 6)));
+
+        boolean isHighPoint = sharePrice >= tradingPrice + 300;
+        boolean isLowPoint = sharePrice <= tradingPrice - 300;
+
+        // 오후 3시 25분일 경우 모두 매도
+        boolean isClosingTime = now.getHour() == 15 && now.getMinute() >= 25;
+
+        // 매수 후 13분 초과 시 매도
+//        boolean isLimitTimeout = currentTradingLdt.isAfter(tradingLdt.plusMinutes(13));
+
+        if (isClosingTime) {
+            log.info("[매도 신호] 장 마감 시간 임박 : {}", now);
+        }
+
+        // TODO 테스트 후 주석 제거
+//        if (isLimitTimeout) {
+//            log.info("[매도 신호] 매수 후 13분 초과 - 매수 시간 : {}", tradingTime);
+//        }
+
+        return isHighPoint || isLowPoint || isClosingTime ;
     }
 
     /**

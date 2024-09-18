@@ -33,7 +33,7 @@ public class WebsocketClientEndpoint {
 
             // 31000: 모의
             // 21000: 실전
-            container.connectToServer(this, new URI("ws://ops.koreainvestment.com:31000"));
+            container.connectToServer(this, new URI("ws://ops.koreainvestment.com:21000"));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

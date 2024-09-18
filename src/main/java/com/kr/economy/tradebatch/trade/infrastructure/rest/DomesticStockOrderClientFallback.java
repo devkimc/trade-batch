@@ -18,6 +18,7 @@ public class DomesticStockOrderClientFallback implements DomesticStockOrderClien
                                          String appKey,
                                          String appSecret,
                                          String trId,
+                                         String custType,
                                          OrderInCashReqDto orderInCashReqDto) {
 
         log.error("[DomesticStockOrderClient 에러] fallback called - contentType: {}, " +
@@ -40,7 +41,7 @@ public class DomesticStockOrderClientFallback implements DomesticStockOrderClien
         OrderInCashResDto orderInCashResDto = OrderInCashResDto.builder()
                 .output(List.of(defaultOutput))
                 .rt_cd("-1")
-                .msg("[DomesticStockOrderClient 에러] fallback called")
+                .msg1("[DomesticStockOrderClient 에러] fallback called")
                 .build();
 
         return orderInCashResDto;

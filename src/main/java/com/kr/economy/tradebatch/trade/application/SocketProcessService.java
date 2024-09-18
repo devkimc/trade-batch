@@ -34,7 +34,7 @@ public class SocketProcessService {
     @Value("${credential.kis.trade.secret-key}")
     private String secretKey;
 
-    @Value("${credential.kis.trade.secret-key}")
+    @Value("${credential.kis.trade.account-no}")
     private String accountNo;
 
     @Value("${spring.profiles.active}")
@@ -47,6 +47,7 @@ public class SocketProcessService {
     private final KoreaStockOrderQueryService koreaStockOrderQueryService;
     private final DomesticStockOrderClient domesticStockOrderClient;
     private final KisAccountQueryService kisAccountQueryService;
+    private final KisOauthService kisOauthService;
 
     public void socketProcess(String message) {
         if (message == null || message.length() < 2) {
@@ -93,62 +94,20 @@ public class SocketProcessService {
 
             // 마지막 체결 내역이 매수일 경우에만 매도
             if (lastTradingHistory.isPresent() && lastTradingHistory.get().isBuyTrade()) {
-                if (lastTradingHistory.get().isSellSignal(sharePrice)) {
-                    String accessToken = kisAccountQueryService.getKisAccount("DEVKIMC").getAccessToken();
-                    log.info("[매도 주문] Oauth 토큰 : {}", accessToken);
-
-                    OrderInCashReqDto orderInCashReqDto = OrderInCashReqDto.builder()
-                            .CANO(KisUtil.getCano(accountNo))
-                            .ACNT_PRDT_CD(KisUtil.getAcntPrdtCd(accountNo))
-                            .PDNO(TICKER_SAMSUNG)
-                            .ORD_DVSN("01")
-                            .ORD_QTY("10")
-                            .ORD_UNPR("0")  // 시장가일 경우 0
-                            .build();
-                    log.info("[매도 주문] 요청: {}", orderInCashReqDto);
-
-                    OrderInCashResDto orderInCashResDto = domesticStockOrderClient.orderInCash(
-                            "application/json; charset=utf-8",
-                            accessToken,
-                            appKey,
-                            secretKey,
-                            "prod".equals(activeProfile) ? TR_ID_TTTC0801U : TR_ID_VTTC0801U,
-                            orderInCashReqDto
-                    );
-                    log.info("[매도 주문] 응답: {}", orderInCashResDto);
+                if (lastTradingHistory.get().isSellSignal(sharePrice, tradingTime)) {
+                    order("S");
                 }
             } else {
                 if (koreaStockOrderQueryService.getBuySignal(TICKER_SAMSUNG)) {
-                    String accessToken = kisAccountQueryService.getKisAccount("DEVKIMC").getAccessToken();
-                    log.info("[매수 주문] Oauth 토큰 : {}", accessToken);
-
-                    OrderInCashReqDto orderInCashReqDto = OrderInCashReqDto.builder()
-                            .CANO(KisUtil.getCano(accountNo))
-                            .ACNT_PRDT_CD(KisUtil.getAcntPrdtCd(accountNo))
-                            .PDNO(TICKER_SAMSUNG)
-                            .ORD_DVSN("01")
-                            .ORD_QTY("10")
-                            .ORD_UNPR("0")  // 시장가일 경우 0
-                            .build();
-                    log.info("[매수 주문] 요청: {}", orderInCashReqDto);
-
-                    OrderInCashResDto orderInCashResDto = domesticStockOrderClient.orderInCash(
-                            "application/json; charset=utf-8",
-                            accessToken,
-                            appKey,
-                            secretKey,
-                            "prod".equals(activeProfile) ? TR_ID_TTTC0802U : TR_ID_VTTC0802U,
-                            orderInCashReqDto
-                    );
-                    log.info("[매수 주문] 응답: {}", orderInCashResDto);
+                    order("B");
                 }
             }
         } catch (DataAccessException dae) {
-            log.error("[Socket response DB 에러] exception : " + dae);
+            log.error("[Socket response DB 에러] exception : {}, stackTrace: {}" , dae, dae.getStackTrace().toString());
             log.error("[Socket response DB 에러] message : " + message);
         } catch (RuntimeException re) {
-            log.error("[Socket response 런타임 에러] exception : " + re);
-            log.error("[Socket response 런타임 에러] message : " + message);
+            log.error("[Socket response 런타임 에러] exception : {}, stackTrace: {}" , re, re.getStackTrace().toString());
+            log.error("[Socket response 런타임 에러] message : {}" , message);
         }
     }
 
@@ -194,6 +153,52 @@ public class SocketProcessService {
         } catch (RuntimeException re) {
             log.error("[Socket response 런타임 에러] exception : " + re);
             log.error("[Socket response 런타임 에러] message : " + message);
+        }
+    }
+
+    private void order(String orderDvsnCode) {
+        String orderDvsnName = "B".equals(orderDvsnCode) ? "매수" : "매도";
+        String trId = "";
+
+        if ("B".equals(orderDvsnCode)) {
+            if ("dev".equals(activeProfile) || "prod".equals(activeProfile)) {
+                trId = TR_ID_TTTC0802U;
+            } else {
+                trId = TR_ID_VTTC0802U;
+            }
+        } else {
+            if ("dev".equals(activeProfile) || "prod".equals(activeProfile)) {
+                trId = TR_ID_TTTC0801U;
+            } else {
+                trId = TR_ID_VTTC0801U;
+            }
+        }
+
+        String accessToken = kisAccountQueryService.getKisAccount("DEVKIMC").getAccessToken();
+        log.info("[{} 주문] Oauth 토큰 : {}", orderDvsnName, accessToken);
+
+        OrderInCashReqDto orderInCashReqDto = OrderInCashReqDto.builder()
+                .cano(KisUtil.getCano(accountNo))
+                .acntPrdtCd(KisUtil.getAcntPrdtCd(accountNo))
+                .pdno(TICKER_SAMSUNG)
+                .ordDvsn("01")
+                .ordQty("10")
+                .ordUnpr("0")  // 시장가일 경우 0
+                .build();
+        log.info("[{} 주문] 요청: {}", orderDvsnName, orderInCashReqDto);
+
+        OrderInCashResDto orderInCashResDto = domesticStockOrderClient.orderInCash(
+                "application/json",
+                "Bearer " + accessToken,
+                appKey,
+                secretKey,
+                trId,
+                "P",
+                orderInCashReqDto
+        );
+
+        if (!"0".equals(orderInCashResDto.getRt_cd())) {
+            throw new RuntimeException(orderInCashResDto.toString());
         }
     }
 }

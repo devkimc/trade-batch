@@ -30,7 +30,7 @@ public class BidAskBalanceRatioHistoryCustomRepositoryImpl extends QuerydslRepos
                         .and(history.bidAskBalanceTrendType.ne(BidAskBalanceTrendType.NONE))
                         .and(history.bidAskBalanceTrendType.ne(BidAskBalanceTrendType.FREEZING)))
                 .orderBy(history.createdDate.desc())
-                .limit(3)
+                .limit(4)
                 .fetch();
     }
 }

@@ -36,7 +36,7 @@ public class DomesticStockOrderCommandService {
 
         try {
             // 1. 주문 정보 등록
-            Order registeredOrder = orderRepository.save(new Order(orderInCashCommand));
+//            Order registeredOrder = orderRepository.save(new Order(orderInCashCommand));
 
             // 2. 한투 주문 요청
             OrderInCashResDto orderInCashResDto = domesticStockOrderClient.orderInCash(
@@ -45,13 +45,14 @@ public class DomesticStockOrderCommandService {
                     appKey,
                     secretKey,
                     orderInCashCommand.getTrId(),
+                    "P",
                     toOrderInCashReqDto(orderInCashCommand)
             );
 
-            registeredOrder.updateOrderResult(orderInCashResDto);
-
-            // 3. 주문 정보 수정
-            updatedOrder = orderRepository.save(registeredOrder);
+//            registeredOrder.updateOrderResult(orderInCashResDto);
+//
+//            // 3. 주문 정보 수정
+//            updatedOrder = orderRepository.save(registeredOrder);
         } catch (DataAccessException dae) {
             log.error("[국내 주식 주문 실패] DB 처리 에러 - {}", dae.toString());
         } catch (RuntimeException re) {
@@ -64,12 +65,12 @@ public class DomesticStockOrderCommandService {
     // TODO mapper 로 변환하기
     private OrderInCashReqDto toOrderInCashReqDto(OrderInCashCommand orderInCashCommand) {
         return OrderInCashReqDto.builder()
-                .CANO(KisUtil.getCano(orderInCashCommand.getAccountNumber()))
-                .ACNT_PRDT_CD(KisUtil.getAcntPrdtCd(orderInCashCommand.getAccountNumber()))
-                .PDNO(orderInCashCommand.getTicker())
-                .ORD_DVSN(orderInCashCommand.getKisOrderDvsnCode().getCode())
-                .ORD_QTY(String.valueOf(orderInCashCommand.getQty()))
-                .ORD_UNPR(String.valueOf(orderInCashCommand.getOrderPrice()))
+                .cano(KisUtil.getCano(orderInCashCommand.getAccountNumber()))
+                .acntPrdtCd(KisUtil.getAcntPrdtCd(orderInCashCommand.getAccountNumber()))
+                .pdno(orderInCashCommand.getTicker())
+                .ordDvsn(orderInCashCommand.getKisOrderDvsnCode().getCode())
+                .ordQty(String.valueOf(orderInCashCommand.getQty()))
+                .ordUnpr(String.valueOf(orderInCashCommand.getOrderPrice()))
                 .build();
     }
 }
