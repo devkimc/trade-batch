@@ -7,5 +7,5 @@ import java.util.Optional;
 
 public interface BidAskBalanceRatioHistoryRepository extends JpaRepository<BidAskBalanceRatioHistory, Long> {
 
-    Optional<BidAskBalanceRatioHistory> findTopByTickerOrderByCreatedDateDesc(String ticker);
+    Optional<BidAskBalanceRatioHistory> findTopByTickerOrderByIdDesc(String ticker);
 }

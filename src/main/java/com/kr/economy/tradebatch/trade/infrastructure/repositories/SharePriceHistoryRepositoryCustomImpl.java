@@ -31,7 +31,7 @@ public class SharePriceHistoryRepositoryCustomImpl extends QuerydslRepositorySup
                                 .and(sharePriceHistory.priceTrendType.ne(PriceTrendType.NONE))
                                 .and(sharePriceHistory.priceTrendType.ne(PriceTrendType.FREEZING))
                 )
-                .orderBy(sharePriceHistory.createdDate.desc())
+                .orderBy(sharePriceHistory.Id.desc())
                 .limit(2)
                 .fetch();
     }

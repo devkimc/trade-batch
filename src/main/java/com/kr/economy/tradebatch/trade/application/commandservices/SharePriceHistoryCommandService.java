@@ -23,7 +23,7 @@ public class SharePriceHistoryCommandService {
      * @param sharePrice
      */
     public void createSharePriceHistory(String ticker, int sharePrice, String tradingTime) {
-        Optional<SharePriceHistory> optLastSharePrice = sharePriceHistoryRepository.findTopByTickerOrderByCreatedDateDesc(ticker);
+        Optional<SharePriceHistory> optLastSharePrice = sharePriceHistoryRepository.findTopByTickerOrderByIdDesc(ticker);
 
         optLastSharePrice.ifPresentOrElse(
                 h -> {

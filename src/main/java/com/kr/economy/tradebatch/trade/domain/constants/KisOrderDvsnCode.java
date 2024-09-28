@@ -11,8 +11,8 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public enum KisOrderDvsnCode {
 
-    MARKET_ORDER("00"),
-    LIMIT_ORDER("01");
+    LIMIT_ORDER("00"),
+    MARKET_ORDER("01");
 
     private String code;
 

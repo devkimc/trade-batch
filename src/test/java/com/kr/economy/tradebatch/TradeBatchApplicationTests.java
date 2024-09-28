@@ -99,7 +99,7 @@ public class TradeBatchApplicationTests {
 					System.out.println("********************************************* " + tradingTime + " : " + (sharePrice - 100) + " 매도 체결 ********************************************* ");
 				}
 			} else {
-				if (koreaStockOrderQueryService.getBuySignal(TICKER_SAMSUNG)) {
+				if (koreaStockOrderQueryService.getBuySignal(TICKER_SAMSUNG, tradingTime)) {
 					CreateTradingHistoryCommand createTradingHistoryCommand = CreateTradingHistoryCommand.builder()
 							.ticker(TICKER_SAMSUNG)
 							.orderDvsnCode("02")

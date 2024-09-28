@@ -29,6 +29,12 @@ public class KisAccount {
     private String accessToken;
 
     @Column
+    private String socketDecryptIv;
+
+    @Column
+    private String socketDecryptKey;
+
+    @Column
     @CreatedDate
     private LocalDateTime regDate;
 
@@ -42,5 +48,10 @@ public class KisAccount {
 
     public void renewSocketKey(String socketKey) {
         this.socketKey = socketKey;
+    }
+
+    public void updateSocketDecryptKey(String iv, String key) {
+        this.socketDecryptIv = iv;
+        this.socketDecryptKey = key;
     }
 }

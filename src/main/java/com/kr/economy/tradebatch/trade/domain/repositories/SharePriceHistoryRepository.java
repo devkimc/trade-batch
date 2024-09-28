@@ -13,5 +13,5 @@ public interface SharePriceHistoryRepository extends JpaRepository<SharePriceHis
      * @param ticker
      * @return
      */
-    Optional<SharePriceHistory> findTopByTickerOrderByCreatedDateDesc(String ticker);
+    Optional<SharePriceHistory> findTopByTickerOrderByIdDesc(String ticker);
 }

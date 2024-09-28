@@ -39,7 +39,7 @@ public class DomesticStockOrderClientFallback implements DomesticStockOrderClien
                 .build();
 
         OrderInCashResDto orderInCashResDto = OrderInCashResDto.builder()
-                .output(List.of(defaultOutput))
+                .output(defaultOutput)
                 .rt_cd("-1")
                 .msg1("[DomesticStockOrderClient 에러] fallback called")
                 .build();

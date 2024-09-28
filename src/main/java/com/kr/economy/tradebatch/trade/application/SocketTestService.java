@@ -39,13 +39,13 @@ public class SocketTestService {
      * 실시간 정보 조회
      * @return
      */
-    public String getRealTimeInfo(String tradeId) {
+    public String getRealTimeInfo(String tradeId, String trKey) {
         String jsonRequest;
 
         try {
             KisAccount kisAccount = kisAccountQueryService.getKisAccount(TEST_ID);
 
-            Map<String, Object> reqMap = getQuoteReqMap(tradeId, kisAccount.getSocketKey());
+            Map<String, Object> reqMap = getQuoteReqMap(tradeId, kisAccount.getSocketKey(), trKey);
             jsonRequest = objectMapper.writeValueAsString(reqMap);
         } catch (JsonProcessingException e) {
             log.error("[실시간 호가 조회 요청 데이터 생성 에러] {}", e);
@@ -61,7 +61,7 @@ public class SocketTestService {
      * @param socketKey
      * @return
      */
-    private Map<String, Object> getQuoteReqMap(String tradeId, String socketKey) {
+    private Map<String, Object> getQuoteReqMap(String tradeId, String socketKey, String trKey) {
         HashMap<String, Object> map = new HashMap<>();
         HashMap<String, String> headerMap = new HashMap<>();
         HashMap<String, String> inputMap = new HashMap<>();
@@ -75,7 +75,7 @@ public class SocketTestService {
 
         // body 세팅
         inputMap.put("tr_id", tradeId);
-        inputMap.put("tr_key", TICKER_SAMSUNG);
+        inputMap.put("tr_key", trKey);
 
         bodyMap.put("input", inputMap);
 
@@ -97,13 +97,13 @@ public class SocketTestService {
             final WebsocketClientEndpoint clientEndPoint = new WebsocketClientEndpoint(socketProcessService);
 
             // send message to websocket 체결가
-            clientEndPoint.sendMessage(getRealTimeInfo(TR_ID_H0STCNT0));
+            clientEndPoint.sendMessage(getRealTimeInfo(TR_ID_H0STCNT0, TICKER_SAMSUNG));
 
             // wait 5 seconds for messages from websocket
             Thread.sleep(5000);
 
             // send message to websocket 체결 통보
-            clientEndPoint.sendMessage(getRealTimeInfo(TR_ID_H0STCNI0));
+            clientEndPoint.sendMessage(getRealTimeInfo(TR_ID_H0STCNI0, "@0573181"));
         } catch (InterruptedException ex) {
             System.err.println("InterruptedException exception: " + ex.getMessage());
         } catch (RuntimeException re) {

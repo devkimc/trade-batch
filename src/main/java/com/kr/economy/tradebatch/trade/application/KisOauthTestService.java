@@ -56,8 +56,8 @@ public class KisOauthTestService {
 //            KisAccount accountForUpdate = kisAccountRepository.findByIdForUpdate(accountId);
 //            log.info("[KIS Oauth] LOCK: {}", accountForUpdate);
 
-            OauthSocketResDto oauthSocketResDto = kisOauthService.oauthSocket(accountId);
-            log.info("[KIS Oauth] approval_key: {}", oauthSocketResDto.getApproval_key());
+//            OauthSocketResDto oauthSocketResDto = kisOauthService.oauthSocket(accountId);
+//            log.info("[KIS Oauth] approval_key: {}", oauthSocketResDto.getApproval_key());
 
             String oauthToken = kisOauthService.oauthToken(accountId);
             log.info("[KIS Oauth] oauthToken: {}", oauthToken);

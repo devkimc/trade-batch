@@ -23,7 +23,7 @@ public class BidAskBalanceCommandService {
     public void createBidAskBalanceRatioHistory(String ticker, Float nextBidAskBalanceRatio, String tradingTime) {
 
         // 1. 마지막 이력 조회
-        Optional<BidAskBalanceRatioHistory> optionalLastBalanceRatio = bidAskBalanceRatioHistoryRepository.findTopByTickerOrderByCreatedDateDesc(ticker);
+        Optional<BidAskBalanceRatioHistory> optionalLastBalanceRatio = bidAskBalanceRatioHistoryRepository.findTopByTickerOrderByIdDesc(ticker);
 
         // 2. 다음 이력 저장
         optionalLastBalanceRatio.ifPresentOrElse(

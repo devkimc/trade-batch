@@ -28,15 +28,14 @@ public class KoreaStockOrderQueryService {
      * @param ticker 종목 코드
      * @return  매수 여부
      */
-    @Transactional
-    public boolean getBuySignal(String ticker) {
+    public boolean getBuySignal(String ticker, String tradingTime) {
         boolean isBuySignal;
 
         try {
             // 최근 매수 추이 이력 조회
             List<BidAskBalanceRatioHistory> recentHistoryByBidAskBalance = bidAskBalanceRatioHistoryCustomRepository.getRecentHistoryByBidAskBalance(ticker);
 
-            if (recentHistoryByBidAskBalance.size() < 4) {
+            if (recentHistoryByBidAskBalance.size() < 5) {
                 log.info("데이터 부족");
                 return false;
             }
@@ -62,10 +61,15 @@ public class KoreaStockOrderQueryService {
             }
 
             // 오후 15시 25분 이전일 경우
-            LocalDateTime now = LocalDateTime.now();
-            boolean isClosingTime = now.getHour() == 15 && now.getMinute() >= 25;
+            int hour = Integer.parseInt(tradingTime.substring(0, 2));
+            int minute = Integer.parseInt(tradingTime.substring(2, 4));
+            int second = Integer.parseInt(tradingTime.substring(4, 6));
 
-            if (isClosingTime) {
+            if (hour == 15 && minute >= 25) {
+                if (hour == 15 && minute == 25 && second == 0) {
+                    log.info("[매수 신호 조회] 장 마감 5분 전 - 매매 종료");
+                }
+
                 return false;
             }
 

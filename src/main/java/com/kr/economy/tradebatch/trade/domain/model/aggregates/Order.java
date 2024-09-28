@@ -100,7 +100,7 @@ public class Order {
             log.error("[주문 요청 실패] - 응답 코드: {}, 응답 메시지 {}", resultCode, resultMsg);
         }
 
-        this.kisOrderId = orderInCashResDto.getOutput().get(0).getODNO();
+        this.kisOrderId = orderInCashResDto.getOutput().getODNO();
         this.resultCode = resultCode;
         this.resultMsg = resultMsg;
     }
