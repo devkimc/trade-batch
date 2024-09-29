@@ -76,33 +76,34 @@ public class TradingHistory {
     public boolean isSellSignal(int sharePrice, String currentTradingTime) {
         LocalDateTime now = LocalDateTime.now();
 
-        String mm = String.valueOf(now.getMonth().getValue());
-        String dd = String.valueOf(now.getDayOfMonth());
-
-        if (mm.length() == 1) {
-            mm = "0" + mm;
-        }
-
-        if (dd.length() == 1) {
-            dd = "0" + dd;
-        }
-
-        LocalDate date = LocalDate.parse(now.getYear() + "-" + mm + "-" + dd);
-        LocalDateTime tradingLdt = date.atTime(Integer.parseInt(tradingTime.substring(0, 2)), Integer.parseInt(tradingTime.substring(2, 4)), Integer.parseInt(tradingTime.substring(4, 6)));
-        LocalDateTime currentTradingLdt = date.atTime(Integer.parseInt(currentTradingTime.substring(0, 2)), Integer.parseInt(currentTradingTime.substring(2, 4)), Integer.parseInt(currentTradingTime.substring(4, 6)));
-
         boolean isHighPoint = sharePrice >= tradingPrice + 300;
         boolean isLowPoint = sharePrice <= tradingPrice - 300;
 
         // 오후 3시 25분일 경우 모두 매도
         boolean isClosingTime = now.getHour() == 15 && now.getMinute() >= 25;
 
-        // 매수 후 13분 초과 시 매도
-        boolean isLimitTimeout = currentTradingLdt.isAfter(tradingLdt.plusMinutes(13));
-
         if (isClosingTime) {
             log.info("[매도 신호] 장 마감 시간 임박 : {}", now);
         }
+
+        // 매수 후 13분 초과 시 매도 로직 중단
+//        String mm = String.valueOf(now.getMonth().getValue());
+//        String dd = String.valueOf(now.getDayOfMonth());
+//
+//        if (mm.length() == 1) {
+//            mm = "0" + mm;
+//        }
+//
+//        if (dd.length() == 1) {
+//            dd = "0" + dd;
+//        }
+//
+//        LocalDate date = LocalDate.parse(now.getYear() + "-" + mm + "-" + dd);
+//        LocalDateTime tradingLdt = date.atTime(Integer.parseInt(tradingTime.substring(0, 2)), Integer.parseInt(tradingTime.substring(2, 4)), Integer.parseInt(tradingTime.substring(4, 6)));
+//        LocalDateTime currentTradingLdt = date.atTime(Integer.parseInt(currentTradingTime.substring(0, 2)), Integer.parseInt(currentTradingTime.substring(2, 4)), Integer.parseInt(currentTradingTime.substring(4, 6)));
+//
+//        // 매수 후 13분 초과 시 매도
+//        boolean isLimitTimeout = currentTradingLdt.isAfter(tradingLdt.plusMinutes(13));
 
         // TODO 테스트 후 주석 제거
 //        if (isLimitTimeout) {

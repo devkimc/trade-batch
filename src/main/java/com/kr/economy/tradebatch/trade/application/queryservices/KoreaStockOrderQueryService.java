@@ -35,7 +35,7 @@ public class KoreaStockOrderQueryService {
             // 최근 매수 추이 이력 조회
             List<BidAskBalanceRatioHistory> recentHistoryByBidAskBalance = bidAskBalanceRatioHistoryCustomRepository.getRecentHistoryByBidAskBalance(ticker);
 
-            if (recentHistoryByBidAskBalance.size() < 5) {
+            if (recentHistoryByBidAskBalance.size() < 1) {
                 log.info("데이터 부족");
                 return false;
             }
@@ -51,6 +51,11 @@ public class KoreaStockOrderQueryService {
 
             List<SharePriceHistory> recentPriceTrendHistory = sharePriceHistoryRepositoryCustom.getRecentTrendHistory(ticker);
 
+            if (recentPriceTrendHistory.size() < 3) {
+                log.info("데이터 부족");
+                return false;
+            }
+
             // 현재가 추이가 2회 연속 감소일 경우 매수
             isBuySignal = recentPriceTrendHistory.stream().allMatch(
                     h -> PriceTrendType.DECREASE.equals(h.getPriceTrendType())
@@ -65,7 +70,7 @@ public class KoreaStockOrderQueryService {
             int minute = Integer.parseInt(tradingTime.substring(2, 4));
             int second = Integer.parseInt(tradingTime.substring(4, 6));
 
-            if (hour == 15 && minute >= 25) {
+            if (hour >= 15 && minute >= 25) {
                 if (hour == 15 && minute == 25 && second == 0) {
                     log.info("[매수 신호 조회] 장 마감 5분 전 - 매매 종료");
                 }

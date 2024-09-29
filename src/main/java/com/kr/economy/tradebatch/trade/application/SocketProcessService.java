@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.Optional;
 
@@ -77,15 +78,27 @@ public class SocketProcessService {
                 System.out.println("socketResultDto = " + socketResultDto);
 
                 SocketResultDto.Body body = socketResultDto.getBody();
+
+                if (body == null) {
+                    log.info("[Socket response] body 값 미존재 socketResultDto : {}", socketResultDto);
+                    return;
+                }
+
                 System.out.println("body = " + body);
 
                 SocketResultDto.OutPut output = body.getOutput();
                 System.out.println("output = " + output);
 
+                if (!StringUtils.hasText(output.getIv()) || !StringUtils.hasText(output.getKey())) {
+                    log.info("[Socket response] 복호화 값 미존재 iv : {}, key : {}", output.getIv(), output.getIv());
+                    return;
+                }
+
                 KisAccount kisAccount = kisAccountQueryService.getKisAccount("DEVKIMC");
 
                 kisAccount.updateSocketDecryptKey(output.getIv(), output.getKey());
                 kisAccountRepository.save(kisAccount);
+                log.info("[Socket response] 복호화 값 저장 성공 iv : {}, key : {}", kisAccount.getSocketDecryptIv(), kisAccount.getSocketDecryptKey());
                 return;
             }
 
@@ -100,7 +113,10 @@ public class SocketProcessService {
             }
         } catch (JsonProcessingException jpe) {
             log.error("[Socket response Json 파싱 에러] exception : {}, message: {}", jpe, jpe.getMessage());
-            log.error("[Socket response DB 에러] message : {}", message);
+            log.error("[Socket response Json 파싱 에러] message : {}", message);
+        } catch (RuntimeException re) {
+            log.error("[Socket response Json 파싱 Runtime 에러] exception : {}, message: {}", re, re.getMessage());
+            log.error("[Socket response Json 파싱 Runtime 에러] message : {}", message);
         }
     }
 
