@@ -2,17 +2,12 @@ package com.kr.economy.tradebatch.trade.application.queryservices;
 
 import com.kr.economy.tradebatch.trade.domain.constants.BidAskBalanceTrendType;
 import com.kr.economy.tradebatch.trade.domain.constants.PriceTrendType;
-import com.kr.economy.tradebatch.trade.domain.model.aggregates.BidAskBalanceRatioHistory;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.SharePriceHistory;
-import com.kr.economy.tradebatch.trade.domain.repositories.BidAskBalanceRatioHistoryCustomRepository;
-import com.kr.economy.tradebatch.trade.domain.repositories.SharePriceHistoryRepository;
 import com.kr.economy.tradebatch.trade.infrastructure.repositories.SharePriceHistoryRepositoryCustom;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -21,7 +16,6 @@ import java.util.List;
 public class KoreaStockOrderQueryService {
 
     private final SharePriceHistoryRepositoryCustom sharePriceHistoryRepositoryCustom;
-    private final BidAskBalanceRatioHistoryCustomRepository bidAskBalanceRatioHistoryCustomRepository;
 
     /**
      * 매수 신호 조회
@@ -32,32 +26,24 @@ public class KoreaStockOrderQueryService {
         boolean isBuySignal;
 
         try {
-            // 최근 매수 추이 이력 조회
-            List<BidAskBalanceRatioHistory> recentHistoryByBidAskBalance = bidAskBalanceRatioHistoryCustomRepository.getRecentHistoryByBidAskBalance(ticker);
+            // 최근 주가 변동 내역 조회
+            List<SharePriceHistory> recentSharePriceHistory = sharePriceHistoryRepositoryCustom.getRecentTrendHistory(ticker);
 
-            if (recentHistoryByBidAskBalance.size() < 1) {
+            if (recentSharePriceHistory.size() < 3) {
                 log.info("데이터 부족");
                 return false;
             }
 
-            // 매수매도잔량비 추이가 3회 연속 증가일 경우 매수
-            isBuySignal = recentHistoryByBidAskBalance.stream().allMatch(
-                    h -> BidAskBalanceTrendType.INCREASE.equals(h.getBidAskBalanceTrendType())
-            );
+            // 마지막 내역의 매수매도 잔량비가 증가일 경우에만 매수
+            SharePriceHistory lastSharePriceHistory = recentSharePriceHistory.get(recentSharePriceHistory.size() - 1);
+            isBuySignal = BidAskBalanceTrendType.INCREASE.equals(lastSharePriceHistory.getBidAskBalanceTrendType());
 
             if (!isBuySignal) {
                 return false;
             }
 
-            List<SharePriceHistory> recentPriceTrendHistory = sharePriceHistoryRepositoryCustom.getRecentTrendHistory(ticker);
-
-            if (recentPriceTrendHistory.size() < 3) {
-                log.info("데이터 부족");
-                return false;
-            }
-
-            // 현재가 추이가 2회 연속 감소일 경우 매수
-            isBuySignal = recentPriceTrendHistory.stream().allMatch(
+            // 현재가 추이가 3회 연속 감소일 경우 매수
+            isBuySignal = recentSharePriceHistory.stream().allMatch(
                     h -> PriceTrendType.DECREASE.equals(h.getPriceTrendType())
             );
 
@@ -80,7 +66,7 @@ public class KoreaStockOrderQueryService {
 
             // 현재가 추이가 2회 연속 감소이지만, 그 사이에 동결인 데이터가 30건 미만인 경우 매수
             // TODO 테스트 후 주석 제거
-//            long idGap = recentPriceTrendHistory.get(0).getId() - recentPriceTrendHistory.get(1).getId();
+//            long idGap = recentSharePriceHistory.get(0).getId() - recentSharePriceHistory.get(1).getId();
 //
 //            if (idGap >= 30) {
 //                return false;

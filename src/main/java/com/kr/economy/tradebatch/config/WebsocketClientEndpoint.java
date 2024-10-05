@@ -69,7 +69,7 @@ public class WebsocketClientEndpoint {
      */
     @OnMessage
     public void onMessage(String message) {
-        socketProcessService.socketProcess(message);
+        socketProcessService.processMessage(message);
     }
 
     @OnMessage

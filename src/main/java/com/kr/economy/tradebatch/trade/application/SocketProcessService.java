@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kr.economy.tradebatch.common.util.KisUtil;
 import com.kr.economy.tradebatch.config.SocketResultDto;
-import com.kr.economy.tradebatch.trade.application.commandservices.BidAskBalanceCommandService;
 import com.kr.economy.tradebatch.trade.application.commandservices.SharePriceHistoryCommandService;
 import com.kr.economy.tradebatch.trade.application.commandservices.TradingHistoryCommandService;
 import com.kr.economy.tradebatch.trade.application.queryservices.KisAccountQueryService;
@@ -48,7 +47,6 @@ public class SocketProcessService {
     private String activeProfile;
 
     private final SharePriceHistoryCommandService sharePriceHistoryCommandService;
-    private final BidAskBalanceCommandService bidAskBalanceCommandService;
     private final TradingHistoryCommandService tradingHistoryCommandService;
     private final TradingHistoryQueryService tradingHistoryQueryService;
     private final KoreaStockOrderQueryService koreaStockOrderQueryService;
@@ -58,7 +56,7 @@ public class SocketProcessService {
     private final KisOauthService kisOauthService;
     private final ObjectMapper objectMapper;
 
-    public void socketProcess(String message) {
+    public void processMessage(String message) {
 
         try {
             if (message == null || message.length() < 2) {
@@ -85,9 +83,7 @@ public class SocketProcessService {
                 }
 
                 System.out.println("body = " + body);
-
                 SocketResultDto.OutPut output = body.getOutput();
-                System.out.println("output = " + output);
 
                 if (!StringUtils.hasText(output.getIv()) || !StringUtils.hasText(output.getKey())) {
                     log.info("[Socket response] 복호화 값 미존재 iv : {}, key : {}", output.getIv(), output.getIv());
@@ -105,7 +101,7 @@ public class SocketProcessService {
             String trId = resultBody[1];
 
             if (TR_ID_H0STCNT0.equals(trId)) {
-                sharePriceProcess(message, resultBody);
+                processRealTimeSharePrice(message, resultBody);
             } else if (TR_ID_H0STCNI0.equals(trId) || TR_ID_H0STCNI9.equals(trId)) {
                 tradeResultNoticeProcess(message, resultBody);
             } else {
@@ -120,7 +116,7 @@ public class SocketProcessService {
         }
     }
 
-    private void sharePriceProcess(String message, String[] resultBody) {
+    private void processRealTimeSharePrice(String message, String[] resultBody) {
         
         String[] result = resultBody[3].split("\\^");
         if (result.length < 38) {
@@ -134,10 +130,7 @@ public class SocketProcessService {
             float bidAskBalanceRatio = Float.parseFloat(result[37]) / Float.parseFloat(result[36]);
 
             // 실시간 현재가 저장
-            sharePriceHistoryCommandService.createSharePriceHistory(TICKER_SAMSUNG, sharePrice, tradingTime);
-
-            // 실시간 매수매도 잔량비 저장
-            bidAskBalanceCommandService.createBidAskBalanceRatioHistory(TICKER_SAMSUNG, bidAskBalanceRatio, tradingTime);
+            sharePriceHistoryCommandService.createSharePriceHistory(TICKER_SAMSUNG, sharePrice, bidAskBalanceRatio, tradingTime);
 
             // 당일 마지막 체결 내역 조회
             Optional<TradingHistory> lastTradingHistory = tradingHistoryQueryService.getLastHistoryOfToday(TICKER_SAMSUNG);

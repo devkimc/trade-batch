@@ -1,24 +1,10 @@
 package com.kr.economy.tradebatch.trade.application;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kr.economy.tradebatch.trade.application.commandservices.BidAskBalanceCommandService;
-import com.kr.economy.tradebatch.trade.application.commandservices.SharePriceHistoryCommandService;
-import com.kr.economy.tradebatch.trade.application.commandservices.TradingHistoryCommandService;
-import com.kr.economy.tradebatch.trade.application.queryservices.KisAccountQueryService;
-import com.kr.economy.tradebatch.trade.domain.model.aggregates.KisAccount;
 import com.kr.economy.tradebatch.trade.domain.repositories.KisAccountRepository;
-import com.kr.economy.tradebatch.trade.infrastructure.rest.dto.OauthSocketResDto;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
-import static com.kr.economy.tradebatch.common.constants.KisStaticValues.*;
 
 @Slf4j
 @Service

@@ -1,5 +1,6 @@
 package com.kr.economy.tradebatch.trade.domain.model.aggregates;
 
+import com.kr.economy.tradebatch.trade.domain.constants.BidAskBalanceTrendType;
 import com.kr.economy.tradebatch.trade.domain.constants.PriceTrendType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -28,60 +29,21 @@ public class SharePriceHistorySim {
     private String ticker;                  // 종목 코드
 
     @Column
-    private String tradingTime;             // 체결 시간
-
-    @Column
     private int sharePrice;                 // 주가 (현재가, 체결가)
 
     @Column
     private PriceTrendType priceTrendType;  // 가격 추세 유형
 
     @Column
-    private boolean buySign;                // 매수 신호
+    private Float bidAskBalanceRatio;       // 매수매도잔량비
+
+    @Column
+    private BidAskBalanceTrendType bidAskBalanceTrendType;  // 매수배도잔량비 증가 추이
+
+    @Column
+    private String tradingTime;             // 체결 시간
 
     @Column(name = "crt_dtm")
     @CreatedDate
     private LocalDateTime createdDate;      // 등록 시간
-
-    @Column(name = "chn_dtm")
-    @LastModifiedDate
-    private LocalDateTime lastModifiedDate; // 수정 시간
-
-    /**
-     * 초기 값
-     * @param
-     */
-    public SharePriceHistorySim(String ticker, int sharePrice) {
-        this.ticker = ticker;
-        this.sharePrice = sharePrice;
-        this.priceTrendType = PriceTrendType.NONE;
-    }
-
-
-    /**
-     * 주가 증감 추이 확인
-     * @param curSharePrice
-     * @return
-     */
-    public PriceTrendType getNextPriceTrendType(int curSharePrice) {
-        PriceTrendType nextPriceTrend;
-
-        if (curSharePrice == 0) {
-            throw new RuntimeException("[주가 증감 추이 확인 에러] - 주가 0원");
-        }
-
-        if (curSharePrice > this.sharePrice) {
-            nextPriceTrend = PriceTrendType.INCREASE;
-        } else if (curSharePrice < this.sharePrice) {
-            nextPriceTrend = PriceTrendType.DECREASE;
-        } else {
-            nextPriceTrend = PriceTrendType.FREEZING;
-        }
-
-        return nextPriceTrend;
-    }
-
-    public void setBuySign() {
-        this.buySign = true;
-    }
 }

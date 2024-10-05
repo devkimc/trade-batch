@@ -22,21 +22,26 @@ public class SharePriceHistoryCommandService {
      * @param ticker
      * @param sharePrice
      */
-    public void createSharePriceHistory(String ticker, int sharePrice, String tradingTime) {
+    public void createSharePriceHistory(String ticker, int sharePrice, Float bidAskBalanceRatio, String tradingTime) {
+
+        // 1. 마지막 이력 조회
         Optional<SharePriceHistory> optLastSharePrice = sharePriceHistoryRepository.findTopByTickerOrderByIdDesc(ticker);
 
+        // 2. 현재가 이력 저장
         optLastSharePrice.ifPresentOrElse(
-                h -> {
+                history -> {
                     SharePriceHistory sharePriceHistory = SharePriceHistory.builder()
                             .ticker(ticker)
                             .sharePrice(sharePrice)
-                            .priceTrendType(h.getNextPriceTrendType(sharePrice))
+                            .priceTrendType(history.getNextPriceTrendType(sharePrice))
+                            .bidAskBalanceRatio(bidAskBalanceRatio)
+                            .bidAskBalanceTrendType(history.getNextBalanceTrendType(bidAskBalanceRatio))
                             .tradingTime(tradingTime)
                             .build();
                     sharePriceHistoryRepository.save(sharePriceHistory);
                 }, () -> {
-                    SharePriceHistory initialSharePriceHistory = new SharePriceHistory(ticker, sharePrice, tradingTime);
-                    sharePriceHistoryRepository.save(initialSharePriceHistory);
+                    SharePriceHistory initialHistory = new SharePriceHistory(ticker, sharePrice, bidAskBalanceRatio, tradingTime);
+                    sharePriceHistoryRepository.save(initialHistory);
                 }
         );
     }
