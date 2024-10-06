@@ -10,6 +10,7 @@ import com.kr.economy.tradebatch.trade.domain.model.aggregates.KisAccount;
 import com.kr.economy.tradebatch.trade.domain.repositories.KisAccountRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -22,6 +23,9 @@ import static com.kr.economy.tradebatch.common.constants.KisStaticValues.*;
 @RequiredArgsConstructor
 // TODO: 서비스 명 변경, '실시간 조회 서비스'
 public class SocketTestService {
+
+    @Value("${credential.kis.trade.his-id}")
+    private String hisId;
 
     private final String TEST_ID = "DEVKIMC";
 
@@ -82,8 +86,7 @@ public class SocketTestService {
         return map;
     }
 
-    public String test() {
-        // https://stackoverflow.com/questions/26452903/javax-websocket-client-simple-example 1번
+    public String tradeProcess() {
         try {
             // init history
             sharePriceHistoryCommandService.deleteHistory();
@@ -96,11 +99,18 @@ public class SocketTestService {
             // send message to websocket 체결가
             clientEndPoint.sendMessage(getRealTimeInfo(TR_ID_H0STCNT0, TICKER_SAMSUNG));
 
+            Thread.sleep(5000);
+            clientEndPoint.sendMessage(getRealTimeInfo(TR_ID_H0STCNT0, TICKER_SK_HYNIX));
+
             // wait 5 seconds for messages from websocket
             Thread.sleep(5000);
 
             // send message to websocket 체결 통보
-            clientEndPoint.sendMessage(getRealTimeInfo(TR_ID_H0STCNI0, "@0573181"));
+            // 실전
+//            clientEndPoint.sendMessage(getRealTimeInfo(TR_ID_H0STCNI0, hisId));
+
+            // 모의
+            clientEndPoint.sendMessage(getRealTimeInfo(TR_ID_H0STCNI9, hisId));
         } catch (InterruptedException ex) {
             System.err.println("InterruptedException exception: " + ex.getMessage());
         } catch (RuntimeException re) {

@@ -3,11 +3,14 @@ package com.kr.economy.tradebatch.trade.application.queryservices;
 import com.kr.economy.tradebatch.trade.domain.constants.BidAskBalanceTrendType;
 import com.kr.economy.tradebatch.trade.domain.constants.PriceTrendType;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.SharePriceHistory;
+import com.kr.economy.tradebatch.trade.domain.model.aggregates.StockItemInfo;
+import com.kr.economy.tradebatch.trade.domain.repositories.StockItemInfoRepository;
 import com.kr.economy.tradebatch.trade.infrastructure.repositories.SharePriceHistoryRepositoryCustom;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -16,6 +19,7 @@ import java.util.List;
 public class KoreaStockOrderQueryService {
 
     private final SharePriceHistoryRepositoryCustom sharePriceHistoryRepositoryCustom;
+    private final StockItemInfoQueryService stockItemInfoQueryService;
 
     /**
      * 매수 신호 조회
@@ -77,5 +81,54 @@ public class KoreaStockOrderQueryService {
         }
 
         return true;
+    }
+
+
+
+    /**
+     * 매도 신호 여부
+     * @param sharePrice
+     * @return
+     */
+    public boolean getSellSignal(String ticker, int sharePrice, int buyPrice, String currentTradingTime) {
+        LocalDateTime now = LocalDateTime.now();
+
+        StockItemInfo stockItemInfo = stockItemInfoQueryService.getStockItemInfo(ticker);
+
+        boolean isHighPoint = sharePrice >= buyPrice + stockItemInfo.getParValue() * 3;
+        boolean isLowPoint = sharePrice <= buyPrice - stockItemInfo.getParValue() * 3;
+
+        // 오후 3시 25분일 경우 모두 매도
+        boolean isClosingTime = now.getHour() == 15 && now.getMinute() >= 25;
+
+        if (isClosingTime) {
+            log.info("[매도 신호] 장 마감 시간 임박 : {}", now);
+        }
+
+        // 매수 후 13분 초과 시 매도 로직 중단
+//        String mm = String.valueOf(now.getMonth().getValue());
+//        String dd = String.valueOf(now.getDayOfMonth());
+//
+//        if (mm.length() == 1) {
+//            mm = "0" + mm;
+//        }
+//
+//        if (dd.length() == 1) {
+//            dd = "0" + dd;
+//        }
+//
+//        LocalDate date = LocalDate.parse(now.getYear() + "-" + mm + "-" + dd);
+//        LocalDateTime tradingLdt = date.atTime(Integer.parseInt(tradingTime.substring(0, 2)), Integer.parseInt(tradingTime.substring(2, 4)), Integer.parseInt(tradingTime.substring(4, 6)));
+//        LocalDateTime currentTradingLdt = date.atTime(Integer.parseInt(currentTradingTime.substring(0, 2)), Integer.parseInt(currentTradingTime.substring(2, 4)), Integer.parseInt(currentTradingTime.substring(4, 6)));
+//
+//        // 매수 후 13분 초과 시 매도
+//        boolean isLimitTimeout = currentTradingLdt.isAfter(tradingLdt.plusMinutes(13));
+
+        // TODO 테스트 후 주석 제거
+//        if (isLimitTimeout) {
+//            log.info("[매도 신호] 매수 후 13분 초과 - 매수 시간 : {}", tradingTime);
+//        }
+
+        return isHighPoint || isLowPoint || isClosingTime ;
     }
 }

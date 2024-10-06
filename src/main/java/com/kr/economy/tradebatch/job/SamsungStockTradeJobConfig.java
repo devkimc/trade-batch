@@ -44,7 +44,7 @@ public class SamsungStockTradeJobConfig {
     @Bean
     @JobScope
     public Tasklet readListTasklet() {
-        socketTestService.test();
+        socketTestService.tradeProcess();
 
         return (contribution, chunkContext) -> {
             return RepeatStatus.FINISHED;

@@ -2,8 +2,8 @@ package com.kr.economy.tradebatch.trade.application;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kr.economy.tradebatch.common.util.KisUtil;
 import com.kr.economy.tradebatch.config.SocketResultDto;
+import com.kr.economy.tradebatch.trade.application.commandservices.OrderCommandService;
 import com.kr.economy.tradebatch.trade.application.commandservices.SharePriceHistoryCommandService;
 import com.kr.economy.tradebatch.trade.application.commandservices.TradingHistoryCommandService;
 import com.kr.economy.tradebatch.trade.application.queryservices.KisAccountQueryService;
@@ -12,11 +12,7 @@ import com.kr.economy.tradebatch.trade.application.queryservices.TradingHistoryQ
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.KisAccount;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.TradingHistory;
 import com.kr.economy.tradebatch.trade.domain.repositories.KisAccountRepository;
-import com.kr.economy.tradebatch.trade.infrastructure.rest.DomesticStockOrderClient;
-import com.kr.economy.tradebatch.trade.infrastructure.rest.dto.OrderInCashReqDto;
-import com.kr.economy.tradebatch.trade.infrastructure.rest.dto.OrderInCashResDto;
 import com.kr.economy.tradebatch.util.AES256;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,27 +30,14 @@ import static com.kr.economy.tradebatch.common.constants.KisStaticValues.*;
 @Transactional
 public class SocketProcessService {
 
-    @Value("${credential.kis.trade.app-key}")
-    private String appKey;
-
-    @Value("${credential.kis.trade.secret-key}")
-    private String secretKey;
-
-    @Value("${credential.kis.trade.account-no}")
-    private String accountNo;
-
-    @Value("${spring.profiles.active}")
-    private String activeProfile;
-
     private final SharePriceHistoryCommandService sharePriceHistoryCommandService;
     private final TradingHistoryCommandService tradingHistoryCommandService;
     private final TradingHistoryQueryService tradingHistoryQueryService;
     private final KoreaStockOrderQueryService koreaStockOrderQueryService;
-    private final DomesticStockOrderClient domesticStockOrderClient;
     private final KisAccountQueryService kisAccountQueryService;
     private final KisAccountRepository kisAccountRepository;
-    private final KisOauthService kisOauthService;
     private final ObjectMapper objectMapper;
+    private final OrderCommandService orderCommandService;
 
     public void processMessage(String message) {
 
@@ -74,15 +57,12 @@ public class SocketProcessService {
                 }
 
                 System.out.println("socketResultDto = " + socketResultDto);
-
                 SocketResultDto.Body body = socketResultDto.getBody();
 
                 if (body == null) {
                     log.info("[Socket response] body 값 미존재 socketResultDto : {}", socketResultDto);
                     return;
                 }
-
-                System.out.println("body = " + body);
                 SocketResultDto.OutPut output = body.getOutput();
 
                 if (!StringUtils.hasText(output.getIv()) || !StringUtils.hasText(output.getKey())) {
@@ -102,7 +82,9 @@ public class SocketProcessService {
 
             if (TR_ID_H0STCNT0.equals(trId)) {
                 processRealTimeSharePrice(message, resultBody);
-            } else if (TR_ID_H0STCNI0.equals(trId) || TR_ID_H0STCNI9.equals(trId)) {
+//            } else if (TR_ID_H0STCNI0.equals(trId)) {           // 실전
+//                tradeResultNoticeProcess(message, resultBody);
+            } else if (TR_ID_H0STCNI9.equals(trId)) {           // 모의
                 tradeResultNoticeProcess(message, resultBody);
             } else {
                 log.error("[Socket response] 존재하지 않는 tr_id : {}, message: {}", trId, message);
@@ -125,24 +107,27 @@ public class SocketProcessService {
         }
 
         try {
+            String ticker = result[0];
             String tradingTime = result[1];
             int sharePrice = Integer.parseInt(result[2]);
             float bidAskBalanceRatio = Float.parseFloat(result[37]) / Float.parseFloat(result[36]);
 
             // 실시간 현재가 저장
-            sharePriceHistoryCommandService.createSharePriceHistory(TICKER_SAMSUNG, sharePrice, bidAskBalanceRatio, tradingTime);
+            sharePriceHistoryCommandService.createSharePriceHistory(ticker, sharePrice, bidAskBalanceRatio, tradingTime);
 
             // 당일 마지막 체결 내역 조회
-            Optional<TradingHistory> lastTradingHistory = tradingHistoryQueryService.getLastHistoryOfToday(TICKER_SAMSUNG);
+            Optional<TradingHistory> optionalTradingHistory = tradingHistoryQueryService.getLastHistoryOfToday(ticker);
 
             // 마지막 체결 내역이 매수일 경우에만 매도
-            if (lastTradingHistory.isPresent() && lastTradingHistory.get().isBuyTrade()) {
-                if (lastTradingHistory.get().isSellSignal(sharePrice, tradingTime)) {
-                    order("S");
+            if (optionalTradingHistory.isPresent() && optionalTradingHistory.get().isBuyTrade()) {
+                TradingHistory lastTradingHistory = optionalTradingHistory.get();
+
+                if (koreaStockOrderQueryService.getSellSignal(ticker, sharePrice, lastTradingHistory.getTradingPrice(), tradingTime)) {
+                    orderCommandService.order(ticker, "S");
                 }
             } else {
-                if (koreaStockOrderQueryService.getBuySignal(TICKER_SAMSUNG, tradingTime)) {
-                    order("B");
+                if (koreaStockOrderQueryService.getBuySignal(ticker, tradingTime)) {
+                    orderCommandService.order(ticker, "B");
                 }
             }
         } catch (DataAccessException dae) {
@@ -202,52 +187,6 @@ public class SocketProcessService {
         } catch (Exception e) {
             log.error("[Socket response 런타임 에러] exception : {}, message: {}" , e, e.getMessage());
             log.error("[Socket response 런타임 에러] message : {}" , message);
-        }
-    }
-
-    private void order(String orderDvsnCode) {
-        String orderDvsnName = "B".equals(orderDvsnCode) ? "매수" : "매도";
-        String trId = "";
-
-        if ("B".equals(orderDvsnCode)) {
-            if ("dev".equals(activeProfile) || "prod".equals(activeProfile)) {
-                trId = TR_ID_TTTC0802U;
-            } else {
-                trId = TR_ID_VTTC0802U;
-            }
-        } else {
-            if ("dev".equals(activeProfile) || "prod".equals(activeProfile)) {
-                trId = TR_ID_TTTC0801U;
-            } else {
-                trId = TR_ID_VTTC0801U;
-            }
-        }
-
-        String accessToken = kisAccountQueryService.getKisAccount("DEVKIMC").getAccessToken();
-        log.info("[{} 주문] Oauth 토큰 : {}", orderDvsnName, accessToken);
-
-        OrderInCashReqDto orderInCashReqDto = OrderInCashReqDto.builder()
-                .cano(KisUtil.getCano(accountNo))
-                .acntPrdtCd(KisUtil.getAcntPrdtCd(accountNo))
-                .pdno(TICKER_SAMSUNG)
-                .ordDvsn("01")
-                .ordQty("1")
-                .ordUnpr("0")  // 시장가일 경우 0
-                .build();
-        log.info("[{} 주문] 요청: {}", orderDvsnName, orderInCashReqDto);
-
-        OrderInCashResDto orderInCashResDto = domesticStockOrderClient.orderInCash(
-                "application/json",
-                "Bearer " + accessToken,
-                appKey,
-                secretKey,
-                trId,
-                "P",
-                orderInCashReqDto
-        );
-
-        if (!"0".equals(orderInCashResDto.getRt_cd())) {
-            throw new RuntimeException(orderInCashResDto.toString());
         }
     }
 }

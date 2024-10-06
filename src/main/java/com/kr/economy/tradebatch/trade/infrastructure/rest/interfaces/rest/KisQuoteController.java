@@ -19,7 +19,7 @@ public class KisQuoteController {
 
     @GetMapping("/test")
     public ResponseEntity<Object> oauthSocket() {
-        return new ResponseEntity<>(socketTestService.test(), HttpStatus.OK);
+        return new ResponseEntity<>(socketTestService.tradeProcess(), HttpStatus.OK);
     }
 
 //    @PostMapping("/real-time")
