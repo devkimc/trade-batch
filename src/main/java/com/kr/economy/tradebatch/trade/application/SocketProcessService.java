@@ -8,10 +8,16 @@ import com.kr.economy.tradebatch.trade.application.commandservices.SharePriceHis
 import com.kr.economy.tradebatch.trade.application.commandservices.TradingHistoryCommandService;
 import com.kr.economy.tradebatch.trade.application.queryservices.KisAccountQueryService;
 import com.kr.economy.tradebatch.trade.application.queryservices.KoreaStockOrderQueryService;
+import com.kr.economy.tradebatch.trade.application.queryservices.OrderQueryService;
 import com.kr.economy.tradebatch.trade.application.queryservices.TradingHistoryQueryService;
+import com.kr.economy.tradebatch.trade.domain.constants.KisOrderDvsnCode;
+import com.kr.economy.tradebatch.trade.domain.constants.OrderDvsnCode;
+import com.kr.economy.tradebatch.trade.domain.constants.OrderStatus;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.KisAccount;
+import com.kr.economy.tradebatch.trade.domain.model.aggregates.Order;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.TradingHistory;
 import com.kr.economy.tradebatch.trade.domain.repositories.KisAccountRepository;
+import com.kr.economy.tradebatch.trade.domain.repositories.OrderRepository;
 import com.kr.economy.tradebatch.util.AES256;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +44,8 @@ public class SocketProcessService {
     private final KisAccountRepository kisAccountRepository;
     private final ObjectMapper objectMapper;
     private final OrderCommandService orderCommandService;
+    private final OrderQueryService orderQueryService;
+    private final OrderRepository orderRepository;
 
     public void processMessage(String message) {
 
@@ -56,11 +64,16 @@ public class SocketProcessService {
                     return;
                 }
 
-                System.out.println("socketResultDto = " + socketResultDto);
                 SocketResultDto.Body body = socketResultDto.getBody();
 
                 if (body == null) {
-                    log.info("[Socket response] body 값 미존재 socketResultDto : {}", socketResultDto);
+                    SocketResultDto.Header header = socketResultDto.getHeader();
+
+                    if (header != null && "PINGPONG".equals(header.getTr_id())) {
+                        log.info("[Socket response] PINGPONG");
+                    } else {
+                        log.info("[Socket response] body 값 미존재 socketResultDto : {}", socketResultDto);
+                    }
                     return;
                 }
                 SocketResultDto.OutPut output = body.getOutput();
@@ -99,6 +112,7 @@ public class SocketProcessService {
     }
 
     private void processRealTimeSharePrice(String message, String[] resultBody) {
+        String accountId = "DEVKIMC";
         
         String[] result = resultBody[3].split("\\^");
         if (result.length < 38) {
@@ -115,19 +129,24 @@ public class SocketProcessService {
             // 실시간 현재가 저장
             sharePriceHistoryCommandService.createSharePriceHistory(ticker, sharePrice, bidAskBalanceRatio, tradingTime);
 
+            // 미체결 주문 내역이 존재할 경우 주문하지 않음
+            if (orderQueryService.existsNotTradingOrder(accountId, ticker)) {
+                return;
+            }
+
             // 당일 마지막 체결 내역 조회
-            Optional<TradingHistory> optionalTradingHistory = tradingHistoryQueryService.getLastHistoryOfToday(ticker);
+            TradingHistory lastTradingHistory = tradingHistoryQueryService.getLastHistoryOfToday(ticker);
 
             // 마지막 체결 내역이 매수일 경우에만 매도
-            if (optionalTradingHistory.isPresent() && optionalTradingHistory.get().isBuyTrade()) {
-                TradingHistory lastTradingHistory = optionalTradingHistory.get();
-
+            if (lastTradingHistory != null && lastTradingHistory.isBuyTrade()) {
                 if (koreaStockOrderQueryService.getSellSignal(ticker, sharePrice, lastTradingHistory.getTradingPrice(), tradingTime)) {
-                    orderCommandService.order(ticker, "S");
+                    orderCommandService.order(
+                            accountId, ticker, OrderDvsnCode.SELL, KisOrderDvsnCode.MARKET_ORDER, sharePrice);
                 }
             } else {
                 if (koreaStockOrderQueryService.getBuySignal(ticker, tradingTime)) {
-                    orderCommandService.order(ticker, "B");
+                    orderCommandService.order(
+                            accountId, ticker, OrderDvsnCode.BUY, KisOrderDvsnCode.MARKET_ORDER, sharePrice);
                 }
             }
         } catch (DataAccessException dae) {
@@ -136,22 +155,32 @@ public class SocketProcessService {
         } catch (RuntimeException re) {
             log.error("[Socket response 런타임 에러] exception : {}, message: {}", re, re.getMessage());
             log.error("[Socket response 런타임 에러] message : {}", message);
+        } catch (Exception e) {
+            log.error("[Socket response 미처리 에러] exception : {}, message: {}", e, e.getMessage());
+            log.error("[Socket response 미처리 에러] message : {}", message);
         }
     }
 
+    /**
+     * 실시간 체결 통보 응답 처리
+     * @param message
+     * @param resultBody
+     */
     private void tradeResultNoticeProcess(String message, String[] resultBody) {
 
         try {
-            KisAccount kisAccount = kisAccountQueryService.getKisAccount("DEVKIMC");
-            String decryptedMessage = new AES256().decrypt(resultBody[3], kisAccount.getSocketDecryptKey(), kisAccount.getSocketDecryptIv());
+            String accountId = "DEVKIMC";
 
-            String[] result = decryptedMessage.split("\\^");
+            KisAccount kisAccount = kisAccountQueryService.getKisAccount(accountId);
+            String tradeResult = new AES256().decrypt(resultBody[3], kisAccount.getSocketDecryptKey(), kisAccount.getSocketDecryptIv());
+
+            String[] result = tradeResult.split("\\^");
             if (result.length < 15) {
-                log.info("[Socket response] 실시간 체결 통보 응답값의 길이가 짧습니다. decryptedMessage : " + decryptedMessage);
+                log.info("[Socket response] 실시간 체결 통보 응답값의 길이가 짧습니다. tradeResult : " + tradeResult);
                 return;
             }
 
-            log.info("[Socket response temporary check] decryptedMessage : " + decryptedMessage);
+            log.info("[실시간 체결 통보 응답] : " + tradeResult);
             String kisId = result[0];
             String kisOrderId = result[2];
             String kisOrOrderID = result[3];
@@ -163,21 +192,44 @@ public class SocketProcessService {
             String tradingTime = result[11];
             String refuseCode = result[12];
             String tradeResultCode = result[13];
-            String tradingResultType = "0".equals(refuseCode) && "2".equals(tradeResultCode) ? "0" : "1";
 
-            CreateTradingHistoryCommand createTradingHistoryCommand = CreateTradingHistoryCommand.builder()
-                    .ticker(ticker)
-                    .orderDvsnCode(orderDvsnCode)
-                    .tradingPrice(Integer.parseInt(tradingPrice))
-                    .tradingQty(Integer.parseInt(tradingQty))
-                    .tradingResultType(tradingResultType)
-                    .kisOrderDvsnCode(kisOrderDvsnCode)
-                    .kisId(kisId)
-                    .tradingTime(tradingTime)
-                    .kisOrderId(kisOrderId)
-                    .kisOrOrderId(kisOrOrderID)
-                    .build();
-            tradingHistoryCommandService.createTradingHistory(createTradingHistoryCommand);
+            Optional<Order> optLastOrder = orderQueryService.getLastOrder(accountId, ticker);
+
+            if (optLastOrder.isEmpty()) {
+                throw new RuntimeException("[주문 내역 조회 실패] 주문 정보 존재하지 않음 : " + tradeResult);
+            }
+
+            Order lastOrder = optLastOrder.get();
+
+            if (lastOrder.isTrading()) {
+                throw new RuntimeException("[주문 내역 조회 실패] 미체결 주문 정보 존재하지 않음 - 마지막 주문 정보 : " + lastOrder);
+            }
+
+            if (tradeResultCode.equals("1")) {
+                CreateTradingHistoryCommand createTradingHistoryCommand = CreateTradingHistoryCommand.builder()
+                        .ticker(ticker)
+                        .orderDvsnCode(orderDvsnCode)
+                        .tradingPrice(Integer.parseInt(tradingPrice))
+                        .tradingQty(Integer.parseInt(tradingQty))
+//                    .tradingResultType(tradingResultType)
+                        .kisOrderDvsnCode(kisOrderDvsnCode)
+                        .kisId(kisId)
+                        .tradingTime(tradingTime)
+                        .kisOrderId(kisOrderId)
+                        .kisOrOrderId(kisOrOrderID)
+                        .build();
+                tradingHistoryCommandService.createTradingHistory(createTradingHistoryCommand);
+
+                lastOrder.updateOrderStatus(OrderStatus.ORDER_SUCCESS);
+                orderRepository.save(lastOrder);
+            } else if (tradeResultCode.equals("2")) {
+                tradingHistoryQueryService.getTradingHistory(ticker)
+                        .orElseThrow(() -> new RuntimeException("[체결 내역 조회 실패] 주문 정보 존재하지 않음 : " + tradeResult));
+
+                lastOrder.updateOrderStatus(OrderStatus.TRADE_SUCCESS);
+                orderRepository.save(lastOrder);
+            }
+//            String tradingResultType = "0".equals(refuseCode) && "2".equals(tradeResultCode) ? "0" : "1";
         } catch (DataAccessException dae) {
             log.error("[Socket response DB 에러] exception : {}, message: {}" , dae, dae.getMessage());
             log.error("[Socket response DB 에러] message : " + message);
@@ -185,8 +237,8 @@ public class SocketProcessService {
             log.error("[Socket response 런타임 에러] exception : {}, message: {}" , re, re.getMessage());
             log.error("[Socket response 런타임 에러] message : {}" , message);
         } catch (Exception e) {
-            log.error("[Socket response 런타임 에러] exception : {}, message: {}" , e, e.getMessage());
-            log.error("[Socket response 런타임 에러] message : {}" , message);
+            log.error("[Socket response 미처리 에러] exception : {}, message: {}" , e, e.getMessage());
+            log.error("[Socket response 미처리 에러] message : {}" , message);
         }
     }
 }

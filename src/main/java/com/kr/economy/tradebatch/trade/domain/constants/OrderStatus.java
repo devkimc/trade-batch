@@ -8,7 +8,8 @@ import lombok.Getter;
 public enum OrderStatus {
 
     REQUEST("R"),
-    SUCCESS("S"),
+    ORDER_SUCCESS("OS"),
+    TRADE_SUCCESS("TS"),
     FAIL("F");
 
     private String code;

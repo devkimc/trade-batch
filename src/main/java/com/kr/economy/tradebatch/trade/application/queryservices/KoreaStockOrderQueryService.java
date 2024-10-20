@@ -4,7 +4,6 @@ import com.kr.economy.tradebatch.trade.domain.constants.BidAskBalanceTrendType;
 import com.kr.economy.tradebatch.trade.domain.constants.PriceTrendType;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.SharePriceHistory;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.StockItemInfo;
-import com.kr.economy.tradebatch.trade.domain.repositories.StockItemInfoRepository;
 import com.kr.economy.tradebatch.trade.infrastructure.repositories.SharePriceHistoryRepositoryCustom;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

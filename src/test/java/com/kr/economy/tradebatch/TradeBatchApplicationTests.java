@@ -64,14 +64,14 @@ public class TradeBatchApplicationTests {
 			sharePriceHistoryCommandService.createSharePriceHistory(ticker, sharePrice, bidAskBalanceRatio, tradingTime);
 
 			// 당일 마지막 체결 내역 조회
-			Optional<TradingHistory> lastTradingHistory = tradingHistoryQueryService.getLastHistoryOfToday(ticker);
+			TradingHistory lastTradingHistory = tradingHistoryQueryService.getLastHistoryOfToday(ticker);
 
 			// 주식 종목 정보 조회
 			StockItemInfo stockItemInfo = stockItemInfoQueryService.getStockItemInfo(ticker);
 
 			// 마지막 체결 내역이 매수일 경우에만 매도
-			if (lastTradingHistory.isPresent() && lastTradingHistory.get().isBuyTrade()) {
-				if (lastTradingHistory.get().isSellSignal(sharePrice, tradingTime)) {
+			if (lastTradingHistory != null && lastTradingHistory.isBuyTrade()) {
+				if (lastTradingHistory.isSellSignal(sharePrice, tradingTime)) {
 					CreateTradingHistoryCommand createTradingHistoryCommand = CreateTradingHistoryCommand.builder()
 							.ticker(ticker)
 							.orderDvsnCode("01")

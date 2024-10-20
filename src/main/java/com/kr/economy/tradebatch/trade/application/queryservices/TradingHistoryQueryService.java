@@ -1,6 +1,7 @@
 package com.kr.economy.tradebatch.trade.application.queryservices;
 
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.TradingHistory;
+import com.kr.economy.tradebatch.trade.domain.repositories.TradingHistoryRepository;
 import com.kr.economy.tradebatch.trade.infrastructure.repositories.TradingHistoryRepositoryCustom;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import java.util.Optional;
 @Slf4j
 @RequiredArgsConstructor
 public class TradingHistoryQueryService {
+    private final TradingHistoryRepository tradingHistoryRepository;
     private final TradingHistoryRepositoryCustom tradingHistoryRepositoryCustom;
 
     /**
@@ -19,7 +21,16 @@ public class TradingHistoryQueryService {
      * @param ticker
      * @return
      */
-    public Optional<TradingHistory> getLastHistoryOfToday(String ticker) {
-        return tradingHistoryRepositoryCustom.getLastTradingHistory(ticker);
+    public TradingHistory getLastHistoryOfToday(String ticker) {
+        return tradingHistoryRepositoryCustom.getLastTradingHistory(ticker).get();
+    }
+
+    /**
+     * 종목 체결 내역 조회
+     * @param ticker
+     * @return
+     */
+    public Optional<TradingHistory> getTradingHistory(String ticker) {
+        return tradingHistoryRepository.findByTicker(ticker);
     }
 }

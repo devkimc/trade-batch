@@ -17,8 +17,8 @@ public class OrderInCashCommand {
     private String ticker;
     private String trId;
     private OrderDvsnCode orderDvsnCode;
-    private Float sharePrice;
-    private Float orderPrice;
+    private int sharePrice;
+    private int orderPrice;
     private int qty;
     private KisOrderDvsnCode kisOrderDvsnCode;
 }

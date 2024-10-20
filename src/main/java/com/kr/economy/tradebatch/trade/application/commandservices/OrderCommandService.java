@@ -1,8 +1,12 @@
 package com.kr.economy.tradebatch.trade.application.commandservices;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kr.economy.tradebatch.common.util.KisUtil;
 import com.kr.economy.tradebatch.trade.application.queryservices.KisAccountQueryService;
+import com.kr.economy.tradebatch.trade.domain.constants.KisOrderDvsnCode;
+import com.kr.economy.tradebatch.trade.domain.constants.OrderDvsnCode;
+import com.kr.economy.tradebatch.trade.domain.constants.OrderStatus;
+import com.kr.economy.tradebatch.trade.domain.model.aggregates.Order;
+import com.kr.economy.tradebatch.trade.domain.repositories.OrderRepository;
 import com.kr.economy.tradebatch.trade.infrastructure.rest.DomesticStockOrderClient;
 import com.kr.economy.tradebatch.trade.infrastructure.rest.dto.OrderInCashReqDto;
 import com.kr.economy.tradebatch.trade.infrastructure.rest.dto.OrderInCashResDto;
@@ -34,12 +38,17 @@ public class OrderCommandService {
 
     private final DomesticStockOrderClient domesticStockOrderClient;
     private final KisAccountQueryService kisAccountQueryService;
+    private final OrderRepository orderRepository;
 
-    public void order(String ticker, String orderDvsnCode) {
-        String orderDvsnName = "B".equals(orderDvsnCode) ? "매수" : "매도";
+    public void order(String accountId,
+                      String ticker,
+                      OrderDvsnCode orderDvsnCode,
+                      KisOrderDvsnCode kisOrderDvsnCode,
+                      int sharePrice) {
+        String orderDvsnName = OrderDvsnCode.BUY.equals(orderDvsnCode) ? "매수" : "매도";
         String trId = "";
 
-        if ("B".equals(orderDvsnCode)) {
+        if (OrderDvsnCode.BUY.equals(orderDvsnCode)) {
             if ("dev".equals(activeProfile) || "prod".equals(activeProfile)) {
                 trId = TR_ID_TTTC0802U;
             } else {
@@ -53,14 +62,25 @@ public class OrderCommandService {
             }
         }
 
-        String accessToken = kisAccountQueryService.getKisAccount("DEVKIMC").getAccessToken();
-        log.info("[{} 주문] Oauth 토큰 : {}", orderDvsnName, accessToken);
+        String accessToken = kisAccountQueryService.getKisAccount(accountId).getAccessToken();
+
+        Order order = Order.builder()
+                .accountId(accountId)
+                .ticker(ticker)
+                .orderStatus(OrderStatus.REQUEST)
+                .orderDvsnCode(orderDvsnCode)
+                .sharePrice(sharePrice)
+                .orderPrice(0)
+                .orderQty(1)
+                .kisOrderDvsnCode(kisOrderDvsnCode)
+                .build();
+        orderRepository.save(order);
 
         OrderInCashReqDto orderInCashReqDto = OrderInCashReqDto.builder()
                 .cano(KisUtil.getCano(accountNo))
                 .acntPrdtCd(KisUtil.getAcntPrdtCd(accountNo))
                 .pdno(ticker)
-                .ordDvsn("01")
+                .ordDvsn(kisOrderDvsnCode.getCode())
                 .ordQty("1")
                 .ordUnpr("0")  // 시장가일 경우 0
                 .build();
@@ -75,6 +95,7 @@ public class OrderCommandService {
                 "P",
                 orderInCashReqDto
         );
+        log.info("[{} 주문] 결과: {}", orderDvsnName, orderInCashResDto);
 
         if (!"0".equals(orderInCashResDto.getRt_cd())) {
             throw new RuntimeException(orderInCashResDto.toString());
