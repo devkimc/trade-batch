@@ -74,7 +74,8 @@ public class OrderCommandService {
                 .orderQty(1)
                 .kisOrderDvsnCode(kisOrderDvsnCode)
                 .build();
-        orderRepository.save(order);
+        Order savedOrder = orderRepository.saveAndFlush(order);
+        log.info("[{} 주문] 요청 전 데이터 저장 성공: {}", orderDvsnName, savedOrder);
 
         OrderInCashReqDto orderInCashReqDto = OrderInCashReqDto.builder()
                 .cano(KisUtil.getCano(accountNo))

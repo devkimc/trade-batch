@@ -21,8 +21,8 @@ public class TradingHistoryQueryService {
      * @param ticker
      * @return
      */
-    public TradingHistory getLastHistoryOfToday(String ticker) {
-        return tradingHistoryRepositoryCustom.getLastTradingHistory(ticker).get();
+    public Optional<TradingHistory> getLastHistoryOfToday(String ticker) {
+        return tradingHistoryRepositoryCustom.getLastTradingHistory(ticker);
     }
 
     /**

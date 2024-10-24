@@ -94,11 +94,11 @@ public class SocketProcessService {
             String trId = resultBody[1];
 
             if (TR_ID_H0STCNT0.equals(trId)) {
-                processRealTimeSharePrice(message, resultBody);
+                processRealTimeSharePrice(trId, message, resultBody);
 //            } else if (TR_ID_H0STCNI0.equals(trId)) {           // 실전
 //                tradeResultNoticeProcess(message, resultBody);
             } else if (TR_ID_H0STCNI9.equals(trId)) {           // 모의
-                tradeResultNoticeProcess(message, resultBody);
+                tradeResultNoticeProcess(trId, message, resultBody);
             } else {
                 log.error("[Socket response] 존재하지 않는 tr_id : {}, message: {}", trId, message);
             }
@@ -111,7 +111,7 @@ public class SocketProcessService {
         }
     }
 
-    private void processRealTimeSharePrice(String message, String[] resultBody) {
+    private void processRealTimeSharePrice(String trId, String message, String[] resultBody) {
         String accountId = "DEVKIMC";
         
         String[] result = resultBody[3].split("\\^");
@@ -135,11 +135,11 @@ public class SocketProcessService {
             }
 
             // 당일 마지막 체결 내역 조회
-            TradingHistory lastTradingHistory = tradingHistoryQueryService.getLastHistoryOfToday(ticker);
+            Optional<TradingHistory> lastTradingHistory = tradingHistoryQueryService.getLastHistoryOfToday(ticker);
 
             // 마지막 체결 내역이 매수일 경우에만 매도
-            if (lastTradingHistory != null && lastTradingHistory.isBuyTrade()) {
-                if (koreaStockOrderQueryService.getSellSignal(ticker, sharePrice, lastTradingHistory.getTradingPrice(), tradingTime)) {
+            if (lastTradingHistory.isPresent() && lastTradingHistory.get().isBuyTrade()) {
+                if (koreaStockOrderQueryService.getSellSignal(ticker, sharePrice, lastTradingHistory.get().getTradingPrice(), tradingTime)) {
                     orderCommandService.order(
                             accountId, ticker, OrderDvsnCode.SELL, KisOrderDvsnCode.MARKET_ORDER, sharePrice);
                 }
@@ -149,14 +149,16 @@ public class SocketProcessService {
                             accountId, ticker, OrderDvsnCode.BUY, KisOrderDvsnCode.MARKET_ORDER, sharePrice);
                 }
             }
-        } catch (DataAccessException dae) {
-            log.error("[Socket response DB 에러] exception : {}, message: {}", dae, dae.getMessage());
+        }
+        catch (DataAccessException dae) {
+            log.error("[{} Socket response DB 에러] exception : {}, message: {}", trId, dae, dae.getMessage());
             log.error("[Socket response DB 에러] message : {}", message);
-        } catch (RuntimeException re) {
-            log.error("[Socket response 런타임 에러] exception : {}, message: {}", re, re.getMessage());
+        }
+        catch (RuntimeException re) {
+            log.error("[{} Socket response 런타임 에러] exception : {}, message: {}", trId, re, re.getMessage());
             log.error("[Socket response 런타임 에러] message : {}", message);
         } catch (Exception e) {
-            log.error("[Socket response 미처리 에러] exception : {}, message: {}", e, e.getMessage());
+            log.error("[{} Socket response 미처리 에러] exception : {}, message: {}", trId, e, e.getMessage());
             log.error("[Socket response 미처리 에러] message : {}", message);
         }
     }
@@ -166,7 +168,7 @@ public class SocketProcessService {
      * @param message
      * @param resultBody
      */
-    private void tradeResultNoticeProcess(String message, String[] resultBody) {
+    private void tradeResultNoticeProcess(String trId, String message, String[] resultBody) {
 
         try {
             String accountId = "DEVKIMC";
@@ -196,6 +198,7 @@ public class SocketProcessService {
             Optional<Order> optLastOrder = orderQueryService.getLastOrder(accountId, ticker);
 
             if (optLastOrder.isEmpty()) {
+                log.info("[주문 내역 조회 실패] accountId: {}, ticker: {}", accountId, ticker);
                 throw new RuntimeException("[주문 내역 조회 실패] 주문 정보 존재하지 않음 : " + tradeResult);
             }
 
@@ -231,14 +234,14 @@ public class SocketProcessService {
             }
 //            String tradingResultType = "0".equals(refuseCode) && "2".equals(tradeResultCode) ? "0" : "1";
         } catch (DataAccessException dae) {
-            log.error("[Socket response DB 에러] exception : {}, message: {}" , dae, dae.getMessage());
-            log.error("[Socket response DB 에러] message : " + message);
+            log.error("[{} Socket response DB 에러] exception : {}, message: {}", trId, dae, dae.getMessage());
+            log.error("[Socket response DB 에러] message : {}", message);
         } catch (RuntimeException re) {
-            log.error("[Socket response 런타임 에러] exception : {}, message: {}" , re, re.getMessage());
-            log.error("[Socket response 런타임 에러] message : {}" , message);
+            log.error("[{} Socket response 런타임 에러] exception : {}, message: {}", trId, re, re.getMessage());
+            log.error("[Socket response 런타임 에러] message : {}", message);
         } catch (Exception e) {
-            log.error("[Socket response 미처리 에러] exception : {}, message: {}" , e, e.getMessage());
-            log.error("[Socket response 미처리 에러] message : {}" , message);
+            log.error("[{} Socket response 미처리 에러] exception : {}, message: {}", trId, e, e.getMessage());
+            log.error("[Socket response 미처리 에러] message : {}", message);
         }
     }
 }
