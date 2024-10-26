@@ -5,5 +5,5 @@ import com.kr.economy.tradebatch.trade.domain.model.aggregates.Order;
 import java.util.Optional;
 
 public interface OrderRepositoryCustom {
-    Optional<Order> getLastOrder(String ticker, String accountId);
+    Optional<Order> getLastOrder(String accountId, String ticker);
 }

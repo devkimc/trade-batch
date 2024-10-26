@@ -3,6 +3,7 @@ package com.kr.economy.tradebatch.trade.application;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kr.economy.tradebatch.config.WebsocketClientEndpoint;
+import com.kr.economy.tradebatch.trade.application.commandservices.OrderCommandService;
 import com.kr.economy.tradebatch.trade.application.commandservices.SharePriceHistoryCommandService;
 import com.kr.economy.tradebatch.trade.application.commandservices.TradingHistoryCommandService;
 import com.kr.economy.tradebatch.trade.application.queryservices.KisAccountQueryService;
@@ -30,12 +31,11 @@ public class SocketTestService {
     private final String TEST_ID = "DEVKIMC";
 
     private final ObjectMapper objectMapper;
-    private final KisOauthService kisOauthService;
-    private final KisAccountRepository kisAccountRepository;
     private final SharePriceHistoryCommandService sharePriceHistoryCommandService;
     private final TradingHistoryCommandService tradingHistoryCommandService;
     private final SocketProcessService socketProcessService;
     private final KisAccountQueryService kisAccountQueryService;
+    private final OrderCommandService orderCommandService;
 
     /**
      * 실시간 정보 조회
@@ -89,6 +89,7 @@ public class SocketTestService {
     public String tradeProcess() {
         try {
             // init history
+            orderCommandService.deleteHistory();
             sharePriceHistoryCommandService.deleteHistory();
             tradingHistoryCommandService.deleteHistory();
             log.info("내역 데이터 초기화 완료");

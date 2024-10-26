@@ -208,7 +208,7 @@ public class SocketProcessService {
                 throw new RuntimeException("[주문 내역 조회 실패] 미체결 주문 정보 존재하지 않음 - 마지막 주문 정보 : " + lastOrder);
             }
 
-            if (tradeResultCode.equals("1")) {
+            if (tradeResultCode.equals(TRADE_RES_CODE_ORDER_TRANSMISSION)) {
                 CreateTradingHistoryCommand createTradingHistoryCommand = CreateTradingHistoryCommand.builder()
                         .ticker(ticker)
                         .orderDvsnCode(orderDvsnCode)
@@ -225,7 +225,7 @@ public class SocketProcessService {
 
                 lastOrder.updateOrderStatus(OrderStatus.ORDER_SUCCESS);
                 orderRepository.save(lastOrder);
-            } else if (tradeResultCode.equals("2")) {
+            } else if (tradeResultCode.equals(TRADE_RES_CODE_TRADE_COMPLETION)) {
                 tradingHistoryQueryService.getTradingHistory(ticker)
                         .orElseThrow(() -> new RuntimeException("[체결 내역 조회 실패] 주문 정보 존재하지 않음 : " + tradeResult));
 

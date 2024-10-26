@@ -20,7 +20,7 @@ public class OrderRepositoryCustomImpl extends QuerydslRepositorySupport impleme
         this.jpaQueryFactory = jpaQueryFactory;
     }
 
-    public Optional<Order> getLastOrder(String ticker, String accountId) {
+    public Optional<Order> getLastOrder(String accountId, String ticker) {
         return Optional.ofNullable(
                 jpaQueryFactory
                         .selectFrom(order)

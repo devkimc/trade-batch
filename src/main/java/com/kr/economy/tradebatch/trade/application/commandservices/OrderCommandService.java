@@ -40,6 +40,14 @@ public class OrderCommandService {
     private final KisAccountQueryService kisAccountQueryService;
     private final OrderRepository orderRepository;
 
+    /**
+     * 매수 매도 주문
+     * @param accountId
+     * @param ticker
+     * @param orderDvsnCode
+     * @param kisOrderDvsnCode
+     * @param sharePrice
+     */
     public void order(String accountId,
                       String ticker,
                       OrderDvsnCode orderDvsnCode,
@@ -101,5 +109,12 @@ public class OrderCommandService {
         if (!"0".equals(orderInCashResDto.getRt_cd())) {
             throw new RuntimeException(orderInCashResDto.toString());
         }
+    }
+
+    /**
+     * 주문 내역 초기화
+     */
+    public void deleteHistory() {
+        orderRepository.deleteAll();
     }
 }

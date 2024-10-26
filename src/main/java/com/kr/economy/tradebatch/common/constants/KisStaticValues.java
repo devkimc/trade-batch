@@ -32,4 +32,10 @@ public class KisStaticValues {
 
     /* 거래 타입 */
     public static final String TRADE_TYPE_REGISTRATION = "1";
+
+    /* 실시간 체결 통보 응답 - 주문 접수 */
+    public static final String TRADE_RES_CODE_ORDER_TRANSMISSION = "1";
+
+    /* 실시간 체결 통보 응답 - 체결 완료 */
+    public static final String TRADE_RES_CODE_TRADE_COMPLETION = "2";
 }
