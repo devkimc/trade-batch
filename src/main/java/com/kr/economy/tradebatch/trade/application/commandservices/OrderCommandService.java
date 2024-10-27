@@ -116,5 +116,6 @@ public class OrderCommandService {
      */
     public void deleteHistory() {
         orderRepository.deleteAll();
+        log.info("[트레이딩 봇] - 주문 내역 초기화 완료");
     }
 }

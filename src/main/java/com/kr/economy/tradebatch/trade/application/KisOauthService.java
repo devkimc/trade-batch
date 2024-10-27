@@ -37,16 +37,17 @@ public class KisOauthService {
                 .appkey(appKey)
                 .appsecret(secretKey)
                 .build();
-        log.info("[Oauth 토큰 발급] {}", oauthTokenReqDto);
 
         OauthTokenResDto oauthTokenResDto = kisOauthClient.oauthToken(oauthTokenReqDto);
 
         KisAccount account = kisAccountRepository.findById(accountId).get();
-
         account.renewAccessToken(oauthTokenResDto.getAccess_token());
 
         KisAccount savedAccount = kisAccountRepository.saveAndFlush(account);
-        log.info("[회원 정보] 결과: {}", savedAccount);
+
+        log.info("[Oauth 토큰 발급] 완료: accountId: {}, token: {}",
+                savedAccount.getAccountId(),
+                savedAccount.getAccessToken());
 
         return savedAccount.getAccessToken();
     }
@@ -63,7 +64,6 @@ public class KisOauthService {
                 .appkey(appKey)
                 .secretkey(secretKey)
                 .build();
-        log.info("[웹소켓 접속키 발급] 요청 데이터: {}", oauthSocketReqDto);
 
         OauthSocketResDto oauthSocketResDto;
 
@@ -73,12 +73,15 @@ public class KisOauthService {
             log.error("[웹소켓 접속키 발급] 실패 appKey: {}", appKey);
             return null;
         }
-        KisAccount account = kisAccountRepository.findById(accountId).get();
 
+        KisAccount account = kisAccountRepository.findById(accountId).get();
         account.renewSocketKey(oauthSocketResDto.getApproval_key());
 
         KisAccount savedAccount = kisAccountRepository.saveAndFlush(account);
-        log.info("[회원 정보] 결과: {}", savedAccount);
+
+        log.info("[Oauth 토큰 발급] 완료: accountId: {}, socketKey: {}",
+                savedAccount.getAccountId(),
+                savedAccount.getSocketKey());
 
         return oauthSocketResDto;
     }

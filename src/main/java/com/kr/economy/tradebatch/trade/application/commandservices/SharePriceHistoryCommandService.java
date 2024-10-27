@@ -47,9 +47,10 @@ public class SharePriceHistoryCommandService {
     }
 
     /**
-     * 현재가 내역 초기화
+     * 체결가 내역 초기화
      */
     public void deleteHistory() {
         sharePriceHistoryRepository.deleteAll();
+        log.info("[트레이딩 봇] - 체결가 내역 초기화 완료");
     }
 }

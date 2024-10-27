@@ -41,7 +41,7 @@ public class OpenFeignConfig {
     @Bean
     public RequestInterceptor requestInterceptor() {
         return requestTemplate -> {
-            System.out.println("requestTemplate = " + requestTemplate);
+            log.info("requestTemplate = {}", requestTemplate);
         };
     }
 

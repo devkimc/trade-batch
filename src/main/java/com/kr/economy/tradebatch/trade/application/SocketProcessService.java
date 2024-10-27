@@ -83,7 +83,7 @@ public class SocketProcessService {
                     return;
                 }
 
-                KisAccount kisAccount = kisAccountQueryService.getKisAccount("DEVKIMC");
+                KisAccount kisAccount = kisAccountQueryService.getKisAccount(TEST_ID);
 
                 kisAccount.updateSocketDecryptKey(output.getIv(), output.getKey());
                 kisAccountRepository.save(kisAccount);
@@ -112,7 +112,6 @@ public class SocketProcessService {
     }
 
     private void processRealTimeSharePrice(String trId, String message, String[] resultBody) {
-        String accountId = "DEVKIMC";
         
         String[] result = resultBody[3].split("\\^");
         if (result.length < 38) {
@@ -130,7 +129,7 @@ public class SocketProcessService {
             sharePriceHistoryCommandService.createSharePriceHistory(ticker, sharePrice, bidAskBalanceRatio, tradingTime);
 
             // 미체결 주문 내역이 존재할 경우 주문하지 않음
-            if (orderQueryService.existsNotTradingOrder(accountId, ticker)) {
+            if (orderQueryService.existsNotTradingOrder(TEST_ID, ticker)) {
                 return;
             }
 
@@ -141,12 +140,12 @@ public class SocketProcessService {
             if (lastTradingHistory.isPresent() && lastTradingHistory.get().isBuyTrade()) {
                 if (koreaStockOrderQueryService.getSellSignal(ticker, sharePrice, lastTradingHistory.get().getTradingPrice(), tradingTime)) {
                     orderCommandService.order(
-                            accountId, ticker, OrderDvsnCode.SELL, KisOrderDvsnCode.MARKET_ORDER, sharePrice);
+                            TEST_ID, ticker, OrderDvsnCode.SELL, KisOrderDvsnCode.MARKET_ORDER, sharePrice);
                 }
             } else {
                 if (koreaStockOrderQueryService.getBuySignal(ticker, tradingTime)) {
                     orderCommandService.order(
-                            accountId, ticker, OrderDvsnCode.BUY, KisOrderDvsnCode.MARKET_ORDER, sharePrice);
+                            TEST_ID, ticker, OrderDvsnCode.BUY, KisOrderDvsnCode.MARKET_ORDER, sharePrice);
                 }
             }
         }
@@ -171,9 +170,7 @@ public class SocketProcessService {
     private void tradeResultNoticeProcess(String trId, String message, String[] resultBody) {
 
         try {
-            String accountId = "DEVKIMC";
-
-            KisAccount kisAccount = kisAccountQueryService.getKisAccount(accountId);
+            KisAccount kisAccount = kisAccountQueryService.getKisAccount(TEST_ID);
             String tradeResult = new AES256().decrypt(resultBody[3], kisAccount.getSocketDecryptKey(), kisAccount.getSocketDecryptIv());
 
             String[] result = tradeResult.split("\\^");
@@ -195,10 +192,10 @@ public class SocketProcessService {
             String refuseCode = result[12];
             String tradeResultCode = result[13];
 
-            Optional<Order> optLastOrder = orderQueryService.getLastOrder(accountId, ticker);
+            Optional<Order> optLastOrder = orderQueryService.getLastOrder(TEST_ID, ticker);
 
             if (optLastOrder.isEmpty()) {
-                log.info("[주문 내역 조회 실패] accountId: {}, ticker: {}", accountId, ticker);
+                log.info("[주문 내역 조회 실패] accountId: {}, ticker: {}", TEST_ID, ticker);
                 throw new RuntimeException("[주문 내역 조회 실패] 주문 정보 존재하지 않음 : " + tradeResult);
             }
 

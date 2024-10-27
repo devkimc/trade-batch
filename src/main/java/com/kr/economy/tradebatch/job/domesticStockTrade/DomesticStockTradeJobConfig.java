@@ -1,6 +1,6 @@
-package com.kr.economy.tradebatch.job;
+package com.kr.economy.tradebatch.job.domesticStockTrade;
 
-import com.kr.economy.tradebatch.trade.application.KisSocketTestService;
+import com.kr.economy.tradebatch.job.domesticStockTrade.tasklet.DomesticStockVirtualTradeTaskletImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -10,8 +10,6 @@ import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.core.step.tasklet.Tasklet;
-import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -19,35 +17,26 @@ import org.springframework.transaction.PlatformTransactionManager;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-public class KisSocketJobConfig {
+public class DomesticStockTradeJobConfig {
 
     private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
-    private final KisSocketTestService kisSocketTestService;
+    private final DomesticStockVirtualTradeTaskletImpl domesticStockTradeTasklet;
 
 
     @Bean
-    public Job kisSocketJob() {
-        return new JobBuilder("KIS_SOCKET", jobRepository)
+    public Job tradeDomesticStockJob() {
+        return new JobBuilder("DOMESTIC_STOCK_TRADE_JOB", jobRepository)
                 .incrementer(new RunIdIncrementer())
-                .start(kisSocketStep())
+                .start(tradeDomesticStockStep())
                 .build();
     }
 
     @Bean
     @JobScope
-    public Step kisSocketStep() {
-        return new StepBuilder("kisSocketStep", jobRepository)
-                .tasklet(kisSocketTasklet(), transactionManager).build();
-    }
-
-    @Bean
-    @JobScope
-    public Tasklet kisSocketTasklet() {
-        kisSocketTestService.test("DEVKIMC");
-
-        return (contribution, chunkContext) -> {
-            return RepeatStatus.FINISHED;
-        };
+    public Step tradeDomesticStockStep() {
+        return new StepBuilder("DOMESTIC_STOCK_TRADE_STEP", jobRepository)
+                .tasklet(domesticStockTradeTasklet, transactionManager)
+                .build();
     }
 }

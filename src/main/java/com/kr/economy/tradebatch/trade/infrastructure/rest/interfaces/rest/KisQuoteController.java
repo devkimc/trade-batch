@@ -1,9 +1,7 @@
 package com.kr.economy.tradebatch.trade.infrastructure.rest.interfaces.rest;
 
-import com.kr.economy.tradebatch.trade.application.SocketTestService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,11 +13,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class KisQuoteController {
 
-    private final SocketTestService socketTestService;
-
     @GetMapping("/test")
     public ResponseEntity<Object> oauthSocket() {
-        return new ResponseEntity<>(socketTestService.tradeProcess(), HttpStatus.OK);
+//        return new ResponseEntity<>(socketTestService.tradeProcess(), HttpStatus.OK);
+        return null;
     }
 
 //    @PostMapping("/real-time")

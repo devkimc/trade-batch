@@ -1,8 +1,6 @@
 package com.kr.economy.tradebatch.scheduler;
 
-import com.kr.economy.tradebatch.job.KisOauthJobConfig;
-import com.kr.economy.tradebatch.job.KisSocketJobConfig;
-import com.kr.economy.tradebatch.job.SamsungStockTradeJobConfig;
+import com.kr.economy.tradebatch.job.domesticStockTrade.DomesticStockTradeJobConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameter;
 import org.springframework.batch.core.JobParameters;
@@ -26,55 +24,7 @@ public class BatchScheduler {
     private JobLauncher jobLauncher;
 
     @Autowired
-    private SamsungStockTradeJobConfig samsungStockTradeJobConfig;
-
-    @Autowired
-    private KisOauthJobConfig kisOauthJobConfig;
-
-    @Autowired
-    private KisSocketJobConfig kisSocketJobConfig;
-
-    @Scheduled(cron = "0 40 8 * * *")
-    public void socketJob() {
-        Map<String, JobParameter<?>> confMap = new HashMap<>();
-        confMap.put("time", new JobParameter(System.currentTimeMillis(), Long.class, true));
-        JobParameters jobParameters = new JobParameters(confMap);
-
-        try {
-            jobLauncher.run(kisSocketJobConfig.kisSocketJob(), jobParameters);
-        } catch (RuntimeException e) {
-            log.error(e.getMessage());
-        } catch (JobInstanceAlreadyCompleteException e) {
-            throw new RuntimeException(e);
-        } catch (JobExecutionAlreadyRunningException e) {
-            throw new RuntimeException(e);
-        } catch (JobParametersInvalidException e) {
-            throw new RuntimeException(e);
-        } catch (JobRestartException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Scheduled(cron = "0 50 8 * * *")
-    public void oauthJob() {
-        Map<String, JobParameter<?>> confMap = new HashMap<>();
-        confMap.put("time", new JobParameter(System.currentTimeMillis(), Long.class, true));
-        JobParameters jobParameters = new JobParameters(confMap);
-
-        try {
-            jobLauncher.run(kisOauthJobConfig.kisOauthJob(), jobParameters);
-        } catch (RuntimeException e) {
-            log.error(e.getMessage());
-        } catch (JobInstanceAlreadyCompleteException e) {
-            throw new RuntimeException(e);
-        } catch (JobExecutionAlreadyRunningException e) {
-            throw new RuntimeException(e);
-        } catch (JobParametersInvalidException e) {
-            throw new RuntimeException(e);
-        } catch (JobRestartException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    private DomesticStockTradeJobConfig domesticStockTradeJobConfig;
 
     // cron
     // 초 / 분 / 시 / 일 / 월 / 요일 (0-7, 0과 7은 일요일)
@@ -85,7 +35,7 @@ public class BatchScheduler {
         JobParameters jobParameters = new JobParameters(confMap);
 
         try {
-            jobLauncher.run(samsungStockTradeJobConfig.testJob(), jobParameters);
+            jobLauncher.run(domesticStockTradeJobConfig.tradeDomesticStockJob(), jobParameters);
         } catch (RuntimeException e) {
             log.error(e.getMessage());
         } catch (JobInstanceAlreadyCompleteException e) {

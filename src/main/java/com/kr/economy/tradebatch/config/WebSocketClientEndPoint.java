@@ -16,14 +16,14 @@ import java.nio.ByteBuffer;
 @Slf4j
 @Component
 @ClientEndpoint
-public class WebsocketClientEndpoint {
+public class WebSocketClientEndPoint {
 
     private final SocketProcessService socketProcessService;
 
     Session userSession = null;
 
     @Autowired
-    public WebsocketClientEndpoint(SocketProcessService socketProcessService) {
+    public WebSocketClientEndPoint(SocketProcessService socketProcessService) {
         try {
             this.socketProcessService = socketProcessService;
 
@@ -76,7 +76,7 @@ public class WebsocketClientEndpoint {
 
     @OnMessage
     public void onMessage(ByteBuffer bytes) {
-        System.out.println("bytes = " + bytes);
+        log.info("bytes = {}", bytes);
     }
 
     /**

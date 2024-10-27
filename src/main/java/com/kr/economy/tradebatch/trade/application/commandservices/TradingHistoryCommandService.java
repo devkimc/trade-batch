@@ -41,5 +41,6 @@ public class TradingHistoryCommandService {
      */
     public void deleteHistory() {
         tradingHistoryRepository.deleteAll();
+        log.info("[트레이딩 봇] - 체결 내역 초기화 완료");
     }
 }

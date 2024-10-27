@@ -2,11 +2,13 @@ package com.kr.economy.tradebatch.common.constants;
 
 public class KisStaticValues {
 
+    public static final String TEST_ID = "DEVKIMC";
+
     // 거래 ID: [실전/모의투자] 실시간 주식 체결가
     public static final String TR_ID_H0STCNT0 = "H0STCNT0";
 
     // 거래 ID: [실전투자] 실시간 주식 체결통보
-//    public static final String TR_ID_H0STCNI0 = "H0STCNI0";
+    public static final String TR_ID_H0STCNI0 = "H0STCNI0";
 
     // 거래 ID: [모의투자] 실시간 주식 체결통보
     public static final String TR_ID_H0STCNI9 = "H0STCNI9";

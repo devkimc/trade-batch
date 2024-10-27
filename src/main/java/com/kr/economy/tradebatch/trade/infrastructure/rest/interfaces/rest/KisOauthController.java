@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import static com.kr.economy.tradebatch.common.constants.KisStaticValues.TEST_ID;
+
 @Slf4j
 @RestController
 @RequestMapping("/kis/oauth")
@@ -19,12 +21,12 @@ public class KisOauthController {
 
     @PostMapping("/token")
     public ResponseEntity<Object> oauthToken() {
-        return new ResponseEntity<>(kisOauthService.oauthToken("DEVKIMC"), HttpStatus.OK);
+        return new ResponseEntity<>(kisOauthService.oauthToken(TEST_ID), HttpStatus.OK);
     }
 
     @PostMapping("/socket")
     public ResponseEntity<Object> oauthSocket() {
 
-        return new ResponseEntity<>(kisOauthService.oauthSocket("DEVKIMC"), HttpStatus.OK);
+        return new ResponseEntity<>(kisOauthService.oauthSocket(TEST_ID), HttpStatus.OK);
     }
 }
