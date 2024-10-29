@@ -27,6 +27,7 @@ public class KisOauthController {
     @PostMapping("/socket")
     public ResponseEntity<Object> oauthSocket() {
 
-        return new ResponseEntity<>(kisOauthService.oauthSocket(TEST_ID), HttpStatus.OK);
+//        return new ResponseEntity<>(kisOauthService.oauthSocket(TEST_ID), HttpStatus.OK);
+        return null;
     }
 }

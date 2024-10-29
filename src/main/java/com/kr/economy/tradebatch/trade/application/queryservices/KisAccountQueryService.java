@@ -14,7 +14,6 @@ public class KisAccountQueryService {
     private final KisAccountRepository kisAccountRepository;
 
     public KisAccount getKisAccount(String accountId) {
-        KisAccount kisAccount = kisAccountRepository.findById(accountId).orElseThrow(() -> new RuntimeException("[Access Token 조회 실패] 회원 정보 미존재"));
-        return kisAccount;
+        return kisAccountRepository.findById(accountId).orElseThrow(() -> new RuntimeException("[Access Token 조회 실패] 회원 정보 미존재"));
     }
 }

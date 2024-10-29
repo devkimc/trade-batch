@@ -46,10 +46,11 @@ public class DomesticStockVirtualTradeTaskletImpl implements DomesticStockTradeT
 
         try {
             kisOauthService.oauthToken(TEST_ID);
-            kisOauthService.oauthSocket(TEST_ID);
+//            kisOauthService.oauthSocket(TEST_ID);
 
             // 사용자 정보 조회
             KisAccount kisAccount = kisAccountQueryService.getKisAccount(TEST_ID);
+            log.info("[트레이딩 봇] - 토큰 발급 후 사용자 정보 : {}", kisAccount);
 
             // 전일 히스토리 초기화
             orderCommandService.deleteHistory();

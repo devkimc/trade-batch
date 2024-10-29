@@ -84,6 +84,7 @@ public class SocketProcessService {
                 }
 
                 KisAccount kisAccount = kisAccountQueryService.getKisAccount(TEST_ID);
+                log.info("[트레이딩 봇] - 복호화 값 저장 전 사용자 정보 : {}", kisAccount);
 
                 kisAccount.updateSocketDecryptKey(output.getIv(), output.getKey());
                 kisAccountRepository.save(kisAccount);

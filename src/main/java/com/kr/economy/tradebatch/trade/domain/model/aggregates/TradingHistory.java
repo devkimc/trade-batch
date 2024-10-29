@@ -9,9 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Entity
 @Getter
@@ -40,7 +38,6 @@ public class TradingHistory {
     private int tradingQty;                          // 체결 수량
 
     // 거부여부
-    @Column(nullable = false)
     private TradingResultType tradingResultType;
 
     // 주문 종류

@@ -38,16 +38,35 @@ public class KisOauthService {
                 .appsecret(secretKey)
                 .build();
 
-        OauthTokenResDto oauthTokenResDto = kisOauthClient.oauthToken(oauthTokenReqDto);
+        OauthSocketReqDto oauthSocketReqDto = OauthSocketReqDto.builder()
+                .grant_type("client_credentials")
+                .appkey(appKey)
+                .secretkey(secretKey)
+                .build();
 
-        KisAccount account = kisAccountRepository.findById(accountId).get();
+        OauthSocketResDto oauthSocketResDto;
+        OauthTokenResDto oauthTokenResDto;
+
+        try {
+            oauthTokenResDto = kisOauthClient.oauthToken(oauthTokenReqDto);
+            oauthSocketResDto = kisOauthClient.oauthSocket(oauthSocketReqDto);
+        } catch (RuntimeException rex) {
+            log.error("[웹소켓 접속키 발급] 실패 accountId: {}", accountId);
+            return null;
+        }
+
+        KisAccount account = kisAccountRepository.findByIdForUpdate(accountId);
+        log.info("[트레이딩 봇] - 토큰 발급 전 사용자 정보 : {}", account);
+
         account.renewAccessToken(oauthTokenResDto.getAccess_token());
+        account.renewSocketKey(oauthSocketResDto.getApproval_key());
 
         KisAccount savedAccount = kisAccountRepository.saveAndFlush(account);
 
-        log.info("[Oauth 토큰 발급] 완료: accountId: {}, token: {}",
+        log.info("[트레이딩 봇] 토큰 발급 완료: accountId: {}, token: {}, socketKey: {}",
                 savedAccount.getAccountId(),
-                savedAccount.getAccessToken());
+                savedAccount.getAccessToken(),
+                savedAccount.getSocketKey());
 
         return savedAccount.getAccessToken();
     }
@@ -58,31 +77,31 @@ public class KisOauthService {
      * 내부 정책 만료 기준: 발급일까지 유지 (23:59)
      * @return
      */
-    public OauthSocketResDto oauthSocket(String accountId) {
-        OauthSocketReqDto oauthSocketReqDto = OauthSocketReqDto.builder()
-                .grant_type("client_credentials")
-                .appkey(appKey)
-                .secretkey(secretKey)
-                .build();
-
-        OauthSocketResDto oauthSocketResDto;
-
-        try {
-            oauthSocketResDto = kisOauthClient.oauthSocket(oauthSocketReqDto);
-        } catch (RuntimeException rex) {
-            log.error("[웹소켓 접속키 발급] 실패 appKey: {}", appKey);
-            return null;
-        }
-
-        KisAccount account = kisAccountRepository.findById(accountId).get();
-        account.renewSocketKey(oauthSocketResDto.getApproval_key());
-
-        KisAccount savedAccount = kisAccountRepository.saveAndFlush(account);
-
-        log.info("[Oauth 토큰 발급] 완료: accountId: {}, socketKey: {}",
-                savedAccount.getAccountId(),
-                savedAccount.getSocketKey());
-
-        return oauthSocketResDto;
-    }
+//    public OauthSocketResDto oauthSocket(String accountId) {
+//        OauthSocketReqDto oauthSocketReqDto = OauthSocketReqDto.builder()
+//                .grant_type("client_credentials")
+//                .appkey(appKey)
+//                .secretkey(secretKey)
+//                .build();
+//
+//        OauthSocketResDto oauthSocketResDto;
+//
+//        try {
+//            oauthSocketResDto = kisOauthClient.oauthSocket(oauthSocketReqDto);
+//        } catch (RuntimeException rex) {
+//            log.error("[웹소켓 접속키 발급] 실패 appKey: {}", appKey);
+//            return null;
+//        }
+//
+//        KisAccount account = kisAccountRepository.findById(accountId).get();
+//        account.renewSocketKey(oauthSocketResDto.getApproval_key());
+//
+//        KisAccount savedAccount = kisAccountRepository.saveAndFlush(account);
+//
+//        log.info("[SocketKey 발급] 완료: accountId: {}, socketKey: {}",
+//                savedAccount.getAccountId(),
+//                savedAccount.getSocketKey());
+//
+//        return oauthSocketResDto;
+//    }
 }
