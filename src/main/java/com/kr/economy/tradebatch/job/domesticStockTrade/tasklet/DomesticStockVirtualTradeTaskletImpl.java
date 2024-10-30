@@ -31,13 +31,11 @@ public class DomesticStockVirtualTradeTaskletImpl implements DomesticStockTradeT
     @Value("${credential.kis.trade.his-id}")
     private String hisId;
 
-    private final ObjectMapper objectMapper;
     private final SharePriceHistoryCommandService sharePriceHistoryCommandService;
     private final TradingHistoryCommandService tradingHistoryCommandService;
     private final SocketProcessService socketProcessService;
     private final KisAccountQueryService kisAccountQueryService;
     private final OrderCommandService orderCommandService;
-    private final KisOauthService kisOauthService;
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
@@ -45,12 +43,9 @@ public class DomesticStockVirtualTradeTaskletImpl implements DomesticStockTradeT
         log.info("[모의투자 트레이딩 봇] - 실행");
 
         try {
-            kisOauthService.oauthToken(TEST_ID);
-//            kisOauthService.oauthSocket(TEST_ID);
-
             // 사용자 정보 조회
             KisAccount kisAccount = kisAccountQueryService.getKisAccount(TEST_ID);
-            log.info("[트레이딩 봇] - 토큰 발급 후 사용자 정보 : {}", kisAccount);
+            log.info("[트레이딩 봇] - 전일 히스토리 초기화 전 사용자 정보 : {}", kisAccount);
 
             // 전일 히스토리 초기화
             orderCommandService.deleteHistory();

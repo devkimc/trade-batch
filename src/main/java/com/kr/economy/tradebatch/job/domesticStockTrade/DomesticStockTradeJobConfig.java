@@ -1,6 +1,7 @@
 package com.kr.economy.tradebatch.job.domesticStockTrade;
 
 import com.kr.economy.tradebatch.job.domesticStockTrade.tasklet.DomesticStockVirtualTradeTaskletImpl;
+import com.kr.economy.tradebatch.job.domesticStockTrade.tasklet.KisOauthTasklet;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -22,13 +23,23 @@ public class DomesticStockTradeJobConfig {
     private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
     private final DomesticStockVirtualTradeTaskletImpl domesticStockTradeTasklet;
+    private final KisOauthTasklet kisOauthTasklet;
 
 
     @Bean
     public Job tradeDomesticStockJob() {
         return new JobBuilder("DOMESTIC_STOCK_TRADE_JOB", jobRepository)
                 .incrementer(new RunIdIncrementer())
-                .start(tradeDomesticStockStep())
+                .start(kisOauthStep())
+                .next(tradeDomesticStockStep())
+                .build();
+    }
+
+    @Bean
+    @JobScope
+    public Step kisOauthStep() {
+        return new StepBuilder("KIS_OAUTH_STEP", jobRepository)
+                .tasklet(kisOauthTasklet, transactionManager)
                 .build();
     }
 
