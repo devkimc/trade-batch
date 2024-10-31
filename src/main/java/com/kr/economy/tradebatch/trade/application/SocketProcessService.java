@@ -227,6 +227,7 @@ public class SocketProcessService {
                 tradingHistoryQueryService.getTradingHistory(ticker)
                         .orElseThrow(() -> new RuntimeException("[체결 내역 조회 실패] 주문 정보 존재하지 않음 : " + tradeResult));
 
+                lastOrder.updateOrderPrice(Integer.parseInt(tradingPrice));
                 lastOrder.updateOrderStatus(OrderStatus.TRADE_SUCCESS);
                 orderRepository.save(lastOrder);
             }

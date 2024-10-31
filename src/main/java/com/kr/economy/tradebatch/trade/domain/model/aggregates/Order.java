@@ -66,6 +66,14 @@ public class Order {
     }
 
     /**
+     * 주문 가격 업데이트
+     * @param orderPrice
+     */
+    public void updateOrderPrice(int orderPrice) {
+        this.orderPrice = orderPrice;
+    }
+
+    /**
      * 미체결 주문인지 확인
      */
     public boolean isNotTrading() {
