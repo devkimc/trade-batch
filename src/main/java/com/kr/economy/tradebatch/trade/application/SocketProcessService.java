@@ -193,6 +193,8 @@ public class SocketProcessService {
             String refuseCode = result[12];
             String tradeResultCode = result[13];
 
+            log.info("[실시간 체결 통보] 마지막 주문 내역 조회 전 ");
+
             Optional<Order> optLastOrder = orderQueryService.getLastOrder(TEST_ID, ticker);
 
             if (optLastOrder.isEmpty()) {
@@ -202,11 +204,15 @@ public class SocketProcessService {
 
             Order lastOrder = optLastOrder.get();
 
+            log.info("[실시간 체결 통보] 마지막 주문 내역 조회 후 order: {}", lastOrder);
+
             if (lastOrder.isTrading()) {
                 throw new RuntimeException("[주문 내역 조회 실패] 미체결 주문 정보 존재하지 않음 - 마지막 주문 정보 : " + lastOrder);
             }
 
             if (tradeResultCode.equals(TRADE_RES_CODE_ORDER_TRANSMISSION)) {
+                log.info("[실시간 체결 통보] 주문 접수 된 주문 order: {}", lastOrder);
+
                 CreateTradingHistoryCommand createTradingHistoryCommand = CreateTradingHistoryCommand.builder()
                         .ticker(ticker)
                         .orderDvsnCode(orderDvsnCode)
@@ -222,14 +228,20 @@ public class SocketProcessService {
                 tradingHistoryCommandService.createTradingHistory(createTradingHistoryCommand);
 
                 lastOrder.updateOrderStatus(OrderStatus.ORDER_SUCCESS);
-                orderRepository.save(lastOrder);
+                Order updatedOrder = orderRepository.save(lastOrder);
+
+                log.info("[실시간 체결 통보] 주문 접수 된 주문 DB 저장 완료 order: {}", updatedOrder);
             } else if (tradeResultCode.equals(TRADE_RES_CODE_TRADE_COMPLETION)) {
+                log.info("[실시간 체결 통보] 체결 완료 된 주문 order: {}", lastOrder);
+
                 tradingHistoryQueryService.getTradingHistory(ticker)
                         .orElseThrow(() -> new RuntimeException("[체결 내역 조회 실패] 주문 정보 존재하지 않음 : " + tradeResult));
 
                 lastOrder.updateOrderPrice(Integer.parseInt(tradingPrice));
                 lastOrder.updateOrderStatus(OrderStatus.TRADE_SUCCESS);
-                orderRepository.save(lastOrder);
+                Order updatedOrder = orderRepository.save(lastOrder);
+
+                log.info("[실시간 체결 통보] 체결 완료 된 주문 DB 저장 완료 order: {}", updatedOrder);
             }
 //            String tradingResultType = "0".equals(refuseCode) && "2".equals(tradeResultCode) ? "0" : "1";
         } catch (DataAccessException dae) {
