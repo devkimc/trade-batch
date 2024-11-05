@@ -90,6 +90,8 @@ public class KoreaStockOrderQueryService {
      * @return
      */
     public boolean getSellSignal(String ticker, int sharePrice, int buyPrice, String currentTradingTime) {
+        log.info("[매도 주문] - 매도 신호입니다. 종목: {} 매수 가격: {}, 현재가: {}", ticker, buyPrice, sharePrice);
+
         LocalDateTime now = LocalDateTime.now();
 
         StockItemInfo stockItemInfo = stockItemInfoQueryService.getStockItemInfo(ticker);

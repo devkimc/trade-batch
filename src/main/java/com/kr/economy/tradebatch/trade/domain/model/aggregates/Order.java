@@ -88,4 +88,13 @@ public class Order {
     public boolean isTrading() {
         return OrderStatus.TRADE_SUCCESS.equals(this.orderStatus);
     }
+
+    /**
+     * 체결된 매수 주문인지 확인
+     * @return
+     */
+    public boolean isCompletedBuyTrading() {
+        return OrderStatus.TRADE_SUCCESS.equals(this.orderStatus) && OrderDvsnCode.BUY.equals(this.orderDvsnCode);
+    }
+
 }

@@ -24,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.Optional;
@@ -135,11 +136,14 @@ public class SocketProcessService {
             }
 
             // 당일 마지막 체결 내역 조회
-            Optional<TradingHistory> lastTradingHistory = tradingHistoryQueryService.getLastHistoryOfToday(ticker);
+//            Optional<TradingHistory> lastTradingHistory = tradingHistoryQueryService.getLastHistoryOfToday(ticker);
+            Optional<Order> lastTradingHistory = orderQueryService.getLastOrder(TEST_ID, ticker);
 
             // 마지막 체결 내역이 매수일 경우에만 매도
-            if (lastTradingHistory.isPresent() && lastTradingHistory.get().isBuyTrade()) {
-                if (koreaStockOrderQueryService.getSellSignal(ticker, sharePrice, lastTradingHistory.get().getTradingPrice(), tradingTime)) {
+            if (lastTradingHistory.isPresent() && lastTradingHistory.get().isCompletedBuyTrading()) {
+                int orderPrice = lastTradingHistory.get().getOrderPrice();
+                if (koreaStockOrderQueryService.getSellSignal(ticker, sharePrice, orderPrice, tradingTime)) {
+
                     orderCommandService.order(
                             TEST_ID, ticker, OrderDvsnCode.SELL, KisOrderDvsnCode.MARKET_ORDER, sharePrice);
                 }
@@ -234,8 +238,9 @@ public class SocketProcessService {
             } else if (tradeResultCode.equals(TRADE_RES_CODE_TRADE_COMPLETION)) {
                 log.info("[실시간 체결 통보] 체결 완료 된 주문 order: {}", lastOrder);
 
-                tradingHistoryQueryService.getTradingHistory(ticker)
-                        .orElseThrow(() -> new RuntimeException("[체결 내역 조회 실패] 주문 정보 존재하지 않음 : " + tradeResult));
+                if (ObjectUtils.isEmpty(tradingHistoryQueryService.getTradingHistoryList(ticker))) {
+                    throw new RuntimeException("[실시간 체결 통보] 주문 접수 내역이 존재하지 않습니다.");
+                }
 
                 lastOrder.updateOrderPrice(Integer.parseInt(tradingPrice));
                 lastOrder.updateOrderStatus(OrderStatus.TRADE_SUCCESS);

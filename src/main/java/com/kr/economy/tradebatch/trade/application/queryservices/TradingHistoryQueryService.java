@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -30,7 +31,7 @@ public class TradingHistoryQueryService {
      * @param ticker
      * @return
      */
-    public Optional<TradingHistory> getTradingHistory(String ticker) {
+    public List<TradingHistory> getTradingHistoryList(String ticker) {
         return tradingHistoryRepository.findByTicker(ticker);
     }
 }
