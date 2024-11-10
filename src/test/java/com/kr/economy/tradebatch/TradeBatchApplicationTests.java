@@ -71,7 +71,7 @@ public class TradeBatchApplicationTests {
 
 			// 마지막 체결 내역이 매수일 경우에만 매도
 			if (lastTradingHistory.isPresent() && lastTradingHistory.get().isBuyTrade()) {
-				if (lastTradingHistory.get().isSellSignal(sharePrice, tradingTime)) {
+				if (koreaStockOrderQueryService.getSellSignal(ticker, sharePrice, lastTradingHistory.get().getTradingPrice(), tradingTime)) {
 					CreateTradingHistoryCommand createTradingHistoryCommand = CreateTradingHistoryCommand.builder()
 							.ticker(ticker)
 							.orderDvsnCode("01")
@@ -82,10 +82,9 @@ public class TradeBatchApplicationTests {
 							.tradingTime(tradingTime)
 							.build();
 					tradingHistoryCommandService.createTradingHistory(createTradingHistoryCommand);
-					System.out.println("****************** " + tradingTime + " : " + (sharePrice - stockItemInfo.getParValue() * 1) + " 매도 체결 ******************");
 				}
 			} else {
-				if (koreaStockOrderQueryService.getBuySignal(ticker, tradingTime)) {
+				if (koreaStockOrderQueryService.getBuySignal(ticker, sharePrice, tradingTime)) {
 					CreateTradingHistoryCommand createTradingHistoryCommand = CreateTradingHistoryCommand.builder()
 							.ticker(ticker)
 							.orderDvsnCode("02")
@@ -96,7 +95,6 @@ public class TradeBatchApplicationTests {
 							.tradingTime(tradingTime)
 							.build();
 					tradingHistoryCommandService.createTradingHistory(createTradingHistoryCommand);
-					System.out.println("****************** " + tradingTime + " : " + (sharePrice + stockItemInfo.getParValue() * 1) + " 매수 체결 ******************");
 				}
 			}
 		}

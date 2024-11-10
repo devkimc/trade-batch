@@ -4,6 +4,7 @@ import com.kr.economy.tradebatch.trade.domain.constants.BidAskBalanceTrendType;
 import com.kr.economy.tradebatch.trade.domain.constants.PriceTrendType;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.SharePriceHistory;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.StockItemInfo;
+import com.kr.economy.tradebatch.trade.domain.repositories.SharePriceHistoryRepository;
 import com.kr.economy.tradebatch.trade.infrastructure.repositories.SharePriceHistoryRepositoryCustom;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,13 +20,14 @@ public class KoreaStockOrderQueryService {
 
     private final SharePriceHistoryRepositoryCustom sharePriceHistoryRepositoryCustom;
     private final StockItemInfoQueryService stockItemInfoQueryService;
+    private final SharePriceHistoryRepository sharePriceHistoryRepository;
 
     /**
      * 매수 신호 조회
      * @param ticker 종목 코드
      * @return  매수 여부
      */
-    public boolean getBuySignal(String ticker, String tradingTime) {
+    public boolean getBuySignal(String ticker, int sharePrice, String tradingTime) {
         boolean isBuySignal;
 
         try {
@@ -74,6 +76,25 @@ public class KoreaStockOrderQueryService {
 //            if (idGap >= 30) {
 //                return false;
 //            }
+            List<SharePriceHistory> top2ByTickerOrderByIdDesc = sharePriceHistoryRepository.findTop2ByTickerOrderByIdDesc(ticker);
+
+            Float top1ByIdDesc = top2ByTickerOrderByIdDesc.get(top2ByTickerOrderByIdDesc.size() - 2).getBidAskBalanceRatio();
+            Float top2ByIdDesc = top2ByTickerOrderByIdDesc.get(top2ByTickerOrderByIdDesc.size() - 1).getBidAskBalanceRatio();
+            float bidAskBalanceRatioGap = Math.round((top1ByIdDesc - top2ByIdDesc) * 100 / 100.0);
+
+            Float reTop1ByDesc = recentSharePriceHistory.get(recentSharePriceHistory.size() - 3).getBidAskBalanceRatio();
+            Float reTop2ByDesc = recentSharePriceHistory.get(recentSharePriceHistory.size() - 2).getBidAskBalanceRatio();
+            float reBidAskBalanceRatioGap = Math.round((reTop1ByDesc - reTop2ByDesc) * 100 / 100.0);
+
+            Float re3Top1ByDesc = recentSharePriceHistory.get(recentSharePriceHistory.size() - 3).getBidAskBalanceRatio();
+            Float re3Top2ByDesc = recentSharePriceHistory.get(recentSharePriceHistory.size() - 1).getBidAskBalanceRatio();
+            float re3BidAskBalanceRatioGap = Math.round((re3Top1ByDesc - re3Top2ByDesc) * 100 / 100.0);
+
+            if (bidAskBalanceRatioGap <= 0 || reBidAskBalanceRatioGap <= 0) {
+                return false;
+            }
+
+            log.info("[매수] 잔1 : {} | 잔2 : {} | 잔3 : {} | 체결 가격 : {} | 거래 시간 : {}", bidAskBalanceRatioGap, reBidAskBalanceRatioGap, re3BidAskBalanceRatioGap, sharePrice + 100, tradingTime);
 
         } catch (RuntimeException re) {
             throw new RuntimeException("[매수 신호 조회 실패]: {}", re);
@@ -90,20 +111,20 @@ public class KoreaStockOrderQueryService {
      * @return
      */
     public boolean getSellSignal(String ticker, int sharePrice, int buyPrice, String currentTradingTime) {
-        log.info("[매도 주문] - 매도 신호입니다. 종목: {} 매수 가격: {}, 현재가: {}", ticker, buyPrice, sharePrice);
-
-        LocalDateTime now = LocalDateTime.now();
 
         StockItemInfo stockItemInfo = stockItemInfoQueryService.getStockItemInfo(ticker);
 
         boolean isHighPoint = sharePrice >= buyPrice + stockItemInfo.getParValue() * 3;
         boolean isLowPoint = sharePrice <= buyPrice - stockItemInfo.getParValue() * 3;
 
+        LocalDateTime now = LocalDateTime.now();
+
         // 오후 3시 25분일 경우 모두 매도
         boolean isClosingTime = now.getHour() == 15 && now.getMinute() >= 25;
 
         if (isClosingTime) {
             log.info("[매도 신호] 장 마감 시간 임박 : {}", now);
+            return false;
         }
 
         // 매수 후 13분 초과 시 매도 로직 중단
@@ -130,6 +151,20 @@ public class KoreaStockOrderQueryService {
 //            log.info("[매도 신호] 매수 후 13분 초과 - 매수 시간 : {}", tradingTime);
 //        }
 
-        return isHighPoint || isLowPoint || isClosingTime ;
+        boolean isSellSignal = isHighPoint || isLowPoint || isClosingTime;
+
+        String word = "";
+
+        if (isHighPoint) {
+            word = "이익";
+        } else if (isLowPoint){
+            word = "손실";
+        }
+
+        if (isSellSignal) {
+            log.warn("[매도] [{}] 체결 가격 : {} | 거래 시간 : {}", word, sharePrice - 100, currentTradingTime);
+        }
+
+        return isSellSignal;
     }
 }

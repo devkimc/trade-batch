@@ -19,6 +19,7 @@ import com.kr.economy.tradebatch.trade.domain.model.aggregates.TradingHistory;
 import com.kr.economy.tradebatch.trade.domain.repositories.KisAccountRepository;
 import com.kr.economy.tradebatch.trade.domain.repositories.OrderRepository;
 import com.kr.economy.tradebatch.util.AES256;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +49,9 @@ public class SocketProcessService {
     private final OrderQueryService orderQueryService;
     private final OrderRepository orderRepository;
 
+    @Value("${spring.profiles.active}")
+    private String activeProfile;
+
     public void processMessage(String message) {
 
         try {
@@ -71,7 +75,9 @@ public class SocketProcessService {
                     SocketResultDto.Header header = socketResultDto.getHeader();
 
                     if (header != null && "PINGPONG".equals(header.getTr_id())) {
-                        log.info("[Socket response] PINGPONG");
+                        if (!"local".equals(activeProfile)) {
+                            log.info("[Socket response] PINGPONG");
+                        }
                     } else {
                         log.info("[Socket response] body 값 미존재 socketResultDto : {}", socketResultDto);
                     }
@@ -148,7 +154,7 @@ public class SocketProcessService {
                             TEST_ID, ticker, OrderDvsnCode.SELL, KisOrderDvsnCode.MARKET_ORDER, sharePrice);
                 }
             } else {
-                if (koreaStockOrderQueryService.getBuySignal(ticker, tradingTime)) {
+                if (koreaStockOrderQueryService.getBuySignal(ticker, sharePrice, tradingTime)) {
                     orderCommandService.order(
                             TEST_ID, ticker, OrderDvsnCode.BUY, KisOrderDvsnCode.MARKET_ORDER, sharePrice);
                 }

@@ -87,7 +87,7 @@ public class SharePriceHistory {
         BidAskBalanceTrendType nextStatus;
 
         if (bidAskBalanceRatio == null) {
-            throw new RuntimeException("getNextStatus 실패");
+            throw new RuntimeException("getNextStatus 실패 - 매수 매도 잔량비 미존재 ");
         }
 
         if (nextBidAskBalanceRatio > this.bidAskBalanceRatio) {

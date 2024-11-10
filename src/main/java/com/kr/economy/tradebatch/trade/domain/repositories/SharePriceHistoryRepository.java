@@ -4,6 +4,7 @@ package com.kr.economy.tradebatch.trade.domain.repositories;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.SharePriceHistory;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface SharePriceHistoryRepository extends JpaRepository<SharePriceHistory, Long> {
@@ -14,4 +15,7 @@ public interface SharePriceHistoryRepository extends JpaRepository<SharePriceHis
      * @return
      */
     Optional<SharePriceHistory> findTopByTickerOrderByIdDesc(String ticker);
+
+
+    List<SharePriceHistory> findTop2ByTickerOrderByIdDesc(String ticker);
 }
