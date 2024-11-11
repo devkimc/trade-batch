@@ -28,6 +28,7 @@ public class KisStaticValues {
     /* 종목 코드 */
     public static final String TICKER_SAMSUNG = "005930";
     public static final String TICKER_SK_HYNIX = "000660";
+    public static final String TICKER_HD_CAR = "005380";
 
     /* 고객 타입 */
     public static final String CUST_TYPE_PERSONAL = "P";

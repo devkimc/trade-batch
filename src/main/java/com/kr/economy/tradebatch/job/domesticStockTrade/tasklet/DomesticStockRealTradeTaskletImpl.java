@@ -59,6 +59,10 @@ public class DomesticStockRealTradeTaskletImpl implements DomesticStockTradeTask
             clientEndPoint.sendMessage(getRealTimeReqJson(kisAccount, TR_ID_H0STCNT0, TICKER_SK_HYNIX));
             Thread.sleep(5000);
 
+            // 현대차 체결가 조회 요청
+            clientEndPoint.sendMessage(getRealTimeReqJson(kisAccount, TR_ID_H0STCNT0, TICKER_HD_CAR));
+            Thread.sleep(5000);
+
             // 체결 통보 조회 요청
             clientEndPoint.sendMessage(getRealTimeReqJson(kisAccount, TR_ID_H0STCNI0, hisId));
         } catch (InterruptedException ex) {

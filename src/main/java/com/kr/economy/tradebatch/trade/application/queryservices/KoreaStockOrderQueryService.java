@@ -114,8 +114,11 @@ public class KoreaStockOrderQueryService {
 
         StockItemInfo stockItemInfo = stockItemInfoQueryService.getStockItemInfo(ticker);
 
-        boolean isHighPoint = sharePrice >= buyPrice + stockItemInfo.getParValue() * 3;
-        boolean isLowPoint = sharePrice <= buyPrice - stockItemInfo.getParValue() * 3;
+        int highPrice = buyPrice + stockItemInfo.getParValue() * 3;
+        int lowPrice = buyPrice - stockItemInfo.getParValue() * 3;
+
+        boolean isHighPoint = sharePrice >= highPrice;
+        boolean isLowPoint = sharePrice <= lowPrice;
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -154,15 +157,18 @@ public class KoreaStockOrderQueryService {
         boolean isSellSignal = isHighPoint || isLowPoint || isClosingTime;
 
         String word = "";
+        int sellPrice = 0;
 
         if (isHighPoint) {
             word = "이익";
+            sellPrice = highPrice;
         } else if (isLowPoint){
             word = "손실";
+            sellPrice = lowPrice;
         }
 
         if (isSellSignal) {
-            log.warn("[매도] [{}] 체결 가격 : {} | 거래 시간 : {}", word, sharePrice - 100, currentTradingTime);
+            log.info("[매도] [{}] 체결 가격 : {} | 거래 시간 : {}", word, sellPrice, currentTradingTime);
         }
 
         return isSellSignal;

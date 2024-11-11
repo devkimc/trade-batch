@@ -93,7 +93,7 @@ public class OrderCommandService {
                 .ordQty("1")
                 .ordUnpr("0")  // 시장가일 경우 0
                 .build();
-        log.info("[{} 주문] 요청: {}", orderDvsnName, orderInCashReqDto);
+//        log.info("[{} 주문] 요청: {}", orderDvsnName, orderInCashReqDto);
 
         OrderInCashResDto orderInCashResDto = domesticStockOrderClient.orderInCash(
                 "application/json",
@@ -104,7 +104,7 @@ public class OrderCommandService {
                 "P",
                 orderInCashReqDto
         );
-        log.info("[{} 주문] 결과: {}", orderDvsnName, orderInCashResDto);
+//        log.info("[{} 주문] 결과: {}", orderDvsnName, orderInCashResDto);
 
         if (!"0".equals(orderInCashResDto.getRt_cd())) {
             throw new RuntimeException(orderInCashResDto.toString());
