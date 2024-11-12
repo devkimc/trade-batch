@@ -190,7 +190,7 @@ public class SocketProcessService {
                 return;
             }
 
-            log.info("[실시간 체결 통보 응답] : " + tradeResult);
+//            log.info("[실시간 체결 통보 응답] : " + tradeResult);
             String kisId = result[0];
             String kisOrderId = result[2];
             String kisOrOrderID = result[3];

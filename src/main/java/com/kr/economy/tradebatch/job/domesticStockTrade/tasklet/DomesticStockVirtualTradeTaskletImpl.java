@@ -1,8 +1,6 @@
 package com.kr.economy.tradebatch.job.domesticStockTrade.tasklet;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kr.economy.tradebatch.config.WebSocketClientEndPoint;
-import com.kr.economy.tradebatch.trade.application.KisOauthService;
 import com.kr.economy.tradebatch.trade.application.SocketProcessService;
 import com.kr.economy.tradebatch.trade.application.commandservices.OrderCommandService;
 import com.kr.economy.tradebatch.trade.application.commandservices.SharePriceHistoryCommandService;
@@ -55,7 +53,7 @@ public class DomesticStockVirtualTradeTaskletImpl implements DomesticStockTradeT
             final WebSocketClientEndPoint clientEndPoint = new WebSocketClientEndPoint(socketProcessService);
 
             // 삼성 체결가 조회 요청
-            clientEndPoint.sendMessage(getRealTimeReqJson(kisAccount, TR_ID_H0STCNT0, TICKER_SAMSUNG));
+            clientEndPoint.sendMessage(getRealTimeReqJson(kisAccount, TR_ID_H0STCNT0, TICKER_SAMSUNG_ELECTRONICS));
             Thread.sleep(5000);
 
             // 하이닉스 체결가 조회 요청

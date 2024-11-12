@@ -94,7 +94,10 @@ public class KoreaStockOrderQueryService {
                 return false;
             }
 
-            log.info("[매수] 잔1 : {} | 잔2 : {} | 잔3 : {} | 체결 가격 : {} | 거래 시간 : {}", bidAskBalanceRatioGap, reBidAskBalanceRatioGap, re3BidAskBalanceRatioGap, sharePrice + 100, tradingTime);
+            StockItemInfo stockItemInfo = stockItemInfoQueryService.getStockItemInfo(ticker);
+
+            int expectedBuyPrice = sharePrice + stockItemInfo.getParValue();
+            log.info("[매수] 잔1 : {} | 잔2 : {} | 잔3 : {} | 체결 가격 : {} | 거래 시간 : {}", bidAskBalanceRatioGap, reBidAskBalanceRatioGap, re3BidAskBalanceRatioGap, expectedBuyPrice, tradingTime);
 
         } catch (RuntimeException re) {
             throw new RuntimeException("[매수 신호 조회 실패]: {}", re);
@@ -168,7 +171,7 @@ public class KoreaStockOrderQueryService {
         }
 
         if (isSellSignal) {
-            log.info("[매도] [{}] 체결 가격 : {} | 거래 시간 : {}", word, sellPrice, currentTradingTime);
+            log.warn("[매도] [{}] [{}] 체결 가격 : {} | 거래 시간 : {}", stockItemInfo.getTickerName(), word, sellPrice, currentTradingTime);
         }
 
         return isSellSignal;
