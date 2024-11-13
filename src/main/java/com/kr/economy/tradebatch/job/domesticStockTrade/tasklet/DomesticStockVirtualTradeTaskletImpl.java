@@ -60,6 +60,14 @@ public class DomesticStockVirtualTradeTaskletImpl implements DomesticStockTradeT
             clientEndPoint.sendMessage(getRealTimeReqJson(kisAccount, TR_ID_H0STCNT0, TICKER_SK_HYNIX));
             Thread.sleep(5000);
 
+            // KODEX200 선물인버스2X 체결가 조회 요청
+            clientEndPoint.sendMessage(getRealTimeReqJson(kisAccount, TR_ID_H0STCNT0, TICKER_KODEX200_FUTURES_INVERSE_2X));
+            Thread.sleep(5000);
+
+            // TIGER 미국S&P500 체결가 조회 요청
+            clientEndPoint.sendMessage(getRealTimeReqJson(kisAccount, TR_ID_H0STCNT0, TICKER_TIGER_USA_SP500));
+            Thread.sleep(5000);
+
             // 체결 통보 조회 요청
             clientEndPoint.sendMessage(getRealTimeReqJson(kisAccount, TR_ID_H0STCNI9, hisId));
         } catch (InterruptedException ex) {
