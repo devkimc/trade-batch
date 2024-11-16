@@ -28,4 +28,13 @@ public class StockItemInfo {
 
     @Column
     private String useYn;                   // 사용 여부
+
+    /**
+     * 하루 최대 손실 금액
+     *   - 최대 손실 금액 이상일 경우 당일 매수를 금지한다.
+     * @return
+     */
+    public int getDailyLossLimitPrice() {
+        return this.parValue * 10;
+    }
 }

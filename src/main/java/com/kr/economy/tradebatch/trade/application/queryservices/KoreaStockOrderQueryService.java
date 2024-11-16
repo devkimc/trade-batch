@@ -1,9 +1,11 @@
 package com.kr.economy.tradebatch.trade.application.queryservices;
 
+import com.kr.economy.tradebatch.common.util.DateUtil;
 import com.kr.economy.tradebatch.trade.domain.constants.BidAskBalanceTrendType;
 import com.kr.economy.tradebatch.trade.domain.constants.PriceTrendType;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.SharePriceHistory;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.StockItemInfo;
+import com.kr.economy.tradebatch.trade.domain.model.aggregates.TradeReturn;
 import com.kr.economy.tradebatch.trade.domain.repositories.SharePriceHistoryRepository;
 import com.kr.economy.tradebatch.trade.infrastructure.repositories.SharePriceHistoryRepositoryCustom;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,13 +24,14 @@ public class KoreaStockOrderQueryService {
     private final SharePriceHistoryRepositoryCustom sharePriceHistoryRepositoryCustom;
     private final StockItemInfoQueryService stockItemInfoQueryService;
     private final SharePriceHistoryRepository sharePriceHistoryRepository;
+    private final TradeReturnQueryService tradeReturnQueryService;
 
     /**
      * 매수 신호 조회
      * @param ticker 종목 코드
      * @return  매수 여부
      */
-    public boolean getBuySignal(String ticker, int sharePrice, String tradingTime) {
+    public boolean getBuySignal(String ticker, int sharePrice, String tradingTime, String accountId) {
         boolean isBuySignal;
 
         try {
@@ -35,7 +39,7 @@ public class KoreaStockOrderQueryService {
             List<SharePriceHistory> recentSharePriceHistory = sharePriceHistoryRepositoryCustom.getRecentTrendHistory(ticker);
 
             if (recentSharePriceHistory.size() < 3) {
-                log.info("데이터 부족");
+                log.debug("데이터 부족");
                 return false;
             }
 
@@ -56,17 +60,37 @@ public class KoreaStockOrderQueryService {
                 return false;
             }
 
-            // 오후 15시 25분 이전일 경우
             int hour = Integer.parseInt(tradingTime.substring(0, 2));
             int minute = Integer.parseInt(tradingTime.substring(2, 4));
             int second = Integer.parseInt(tradingTime.substring(4, 6));
 
+            // 장 마감 5분 전일 경우 매수 X
             if (hour >= 15 && minute >= 25) {
                 if (hour == 15 && minute == 25 && second == 0) {
-                    log.info("[매수 신호 조회] 장 마감 5분 전 - 매매 종료");
+                    log.info("[매수 신호 조회] 장 마감 5분 전 - 매수 X");
                 }
 
                 return false;
+
+            // 장 시작 후 1분 이내인 경우 매수 X
+            } else if (hour == 9 && minute == 0) {
+                log.info("[매수 신호 조회] 장 시작 후 1분 이내 - 매수 X");
+                return false;
+            }
+
+            // 주식 상품 정보 조회
+            StockItemInfo stockItemInfo = stockItemInfoQueryService.getStockItemInfo(ticker);
+
+            // 당일 최대 손실금액 한도 확인
+            Optional<TradeReturn> optTradeReturn = tradeReturnQueryService.getTradeReturn(accountId, ticker, DateUtil.toNonHyphenDay(LocalDateTime.now()));
+
+            if (optTradeReturn.isPresent()) {
+                TradeReturn tradeReturn = optTradeReturn.get();
+
+                // 당일 손실 여부 && 당일 손실 금액 >= 당일 최대 손실 금액
+                if (tradeReturn.isLoss() && tradeReturn.getLossPrice() >= stockItemInfo.getDailyLossLimitPrice()) {
+                    return false;
+                }
             }
 
             // 현재가 추이가 2회 연속 감소이지만, 그 사이에 동결인 데이터가 30건 미만인 경우 매수
@@ -93,8 +117,6 @@ public class KoreaStockOrderQueryService {
             if (bidAskBalanceRatioGap <= 0 || reBidAskBalanceRatioGap <= 0) {
                 return false;
             }
-
-            StockItemInfo stockItemInfo = stockItemInfoQueryService.getStockItemInfo(ticker);
 
             int expectedBuyPrice = sharePrice + stockItemInfo.getParValue();
             log.info("[매수] 잔1 : {} | 잔2 : {} | 잔3 : {} | 체결 가격 : {} | 거래 시간 : {}", bidAskBalanceRatioGap, reBidAskBalanceRatioGap, re3BidAskBalanceRatioGap, expectedBuyPrice, tradingTime);

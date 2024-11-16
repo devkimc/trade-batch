@@ -36,8 +36,10 @@ public class Order {
     @Column(nullable = false)
     private OrderStatus orderStatus;            // 주문 상태
 
+    @Column
     private OrderDvsnCode orderDvsnCode;        // 주문 구분 코드 (매수 / 매도)
 
+    @Column
     private int sharePrice;                     // 주문 시 주가
 
     @Column
@@ -48,6 +50,12 @@ public class Order {
 
     @Column(nullable = false)
     private KisOrderDvsnCode kisOrderDvsnCode;  // 한투 주문 구분 코드  (시장가 주문, 지정가 주문 등)
+
+    @Column
+    private String kisOrderNo;                  // 원주문 번호
+
+    @Column
+    private String kisOriginOrderNo;            // 한투 원주문 번호
 
     @Column(name = "crt_dtm")
     @CreatedDate

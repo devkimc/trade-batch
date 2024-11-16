@@ -1,0 +1,61 @@
+package com.kr.economy.tradebatch.trade.domain.model.aggregates;
+
+import com.kr.economy.tradebatch.trade.domain.constants.OrderDvsnCode;
+import com.kr.economy.tradebatch.trade.domain.model.valueObject.TradeReturnId;
+import jakarta.persistence.*;
+import lombok.*;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@ToString
+@EntityListeners(AuditingEntityListener.class)
+@Slf4j
+public class TradeReturn {
+
+    @EmbeddedId
+    private TradeReturnId tradeReturnId;    // 순번
+
+    @Column
+    private int totalBuyPrice;              // 총 매수 금액
+
+    @Column
+    private int totalSellPrice;             // 총 매도 금액
+
+    @Column(name = "crt_dtm")
+    @CreatedDate
+    private LocalDateTime createdDate;      // 등록 시간
+
+    @Column(name = "chn_dtm")
+    @LastModifiedDate
+    private LocalDateTime lastModifiedDate; // 수정 시간
+
+    // 체결 금액 추가
+    public void addTradePrice(OrderDvsnCode orderDvsnCode, int price) {
+        if (OrderDvsnCode.BUY.equals(orderDvsnCode)) {
+            this.totalBuyPrice = this.totalBuyPrice + price;
+        } else if (OrderDvsnCode.SELL.equals(orderDvsnCode)) {
+            this.totalSellPrice = this.totalSellPrice + price;
+        } else {
+            throw new RuntimeException("[수익 계산 실패] 주문 구문 코드를 확인하세요.");
+        }
+    }
+
+    // 손실 금액 반환
+    public int getLossPrice() {
+        return Math.abs(totalSellPrice - totalBuyPrice);
+    }
+
+    // 손실 여부 반환
+    public boolean isLoss() {
+        return totalSellPrice - totalBuyPrice < 0;
+    }
+}

@@ -16,8 +16,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.List;
 import java.util.Optional;
 
+import static com.kr.economy.tradebatch.common.constants.KisStaticValues.TEST_ID;
+
 @SpringBootTest
-//@Import({TestConfig.class})
 public class TradeBatchApplicationTests {
 
 	@Autowired
@@ -84,7 +85,7 @@ public class TradeBatchApplicationTests {
 					tradingHistoryCommandService.createTradingHistory(createTradingHistoryCommand);
 				}
 			} else {
-				if (koreaStockOrderQueryService.getBuySignal(ticker, sharePrice, tradingTime)) {
+				if (koreaStockOrderQueryService.getBuySignal(ticker, sharePrice, tradingTime, TEST_ID)) {
 					CreateTradingHistoryCommand createTradingHistoryCommand = CreateTradingHistoryCommand.builder()
 							.ticker(ticker)
 							.orderDvsnCode("02")

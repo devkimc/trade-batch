@@ -1,6 +1,6 @@
 package com.kr.economy.tradebatch.job.domesticStockTrade.tasklet;
 
-import com.kr.economy.tradebatch.trade.application.KisOauthService;
+import com.kr.economy.tradebatch.trade.application.commandservices.KisAccountCommandService;
 import com.kr.economy.tradebatch.trade.application.queryservices.KisAccountQueryService;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.KisAccount;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ import static com.kr.economy.tradebatch.common.constants.KisStaticValues.*;
 public class KisOauthTasklet implements Tasklet {
 
     private final KisAccountQueryService kisAccountQueryService;
-    private final KisOauthService kisOauthService;
+    private final KisAccountCommandService kisAccountCommandService;
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
@@ -28,7 +28,7 @@ public class KisOauthTasklet implements Tasklet {
         log.info("[모의투자 트레이딩 봇] - 실행");
 
         try {
-            kisOauthService.oauthToken(TEST_ID);
+            kisAccountCommandService.oauthToken(TEST_ID);
 
             // 사용자 정보 조회
             KisAccount kisAccount = kisAccountQueryService.getKisAccount(TEST_ID);

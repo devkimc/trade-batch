@@ -1,6 +1,6 @@
 package com.kr.economy.tradebatch.trade.infrastructure.rest.interfaces.rest;
 
-import com.kr.economy.tradebatch.trade.application.KisOauthService;
+import com.kr.economy.tradebatch.trade.application.commandservices.KisAccountCommandService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -17,11 +17,11 @@ import static com.kr.economy.tradebatch.common.constants.KisStaticValues.TEST_ID
 @RequiredArgsConstructor
 public class KisOauthController {
 
-    private final KisOauthService kisOauthService;
+    private final KisAccountCommandService kisAccountCommandService;
 
     @PostMapping("/token")
     public ResponseEntity<Object> oauthToken() {
-        return new ResponseEntity<>(kisOauthService.oauthToken(TEST_ID), HttpStatus.OK);
+        return new ResponseEntity<>(kisAccountCommandService.oauthToken(TEST_ID), HttpStatus.OK);
     }
 
     @PostMapping("/socket")
