@@ -5,11 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kr.economy.tradebatch.config.SocketResultDto;
 import com.kr.economy.tradebatch.trade.application.commandservices.OrderCommandService;
 import com.kr.economy.tradebatch.trade.application.commandservices.SharePriceHistoryCommandService;
+import com.kr.economy.tradebatch.trade.application.commandservices.TradeReturnCommandService;
 import com.kr.economy.tradebatch.trade.application.commandservices.TradingHistoryCommandService;
-import com.kr.economy.tradebatch.trade.application.queryservices.KisAccountQueryService;
-import com.kr.economy.tradebatch.trade.application.queryservices.KoreaStockOrderQueryService;
-import com.kr.economy.tradebatch.trade.application.queryservices.OrderQueryService;
-import com.kr.economy.tradebatch.trade.application.queryservices.TradingHistoryQueryService;
+import com.kr.economy.tradebatch.trade.application.queryservices.*;
 import com.kr.economy.tradebatch.trade.domain.constants.KisOrderDvsnCode;
 import com.kr.economy.tradebatch.trade.domain.constants.OrderDvsnCode;
 import com.kr.economy.tradebatch.trade.domain.constants.OrderStatus;
@@ -48,6 +46,7 @@ public class SocketProcessService {
     private final OrderCommandService orderCommandService;
     private final OrderQueryService orderQueryService;
     private final OrderRepository orderRepository;
+    private final TradeReturnCommandService tradeReturnCommandService;
 
     @Value("${spring.profiles.active}")
     private String activeProfile;
@@ -152,7 +151,7 @@ public class SocketProcessService {
                             TEST_ID, ticker, OrderDvsnCode.SELL, KisOrderDvsnCode.MARKET_ORDER, sharePrice);
                 }
             } else {
-                if (koreaStockOrderQueryService.getBuySignal(ticker, sharePrice, tradingTime)) {
+                if (koreaStockOrderQueryService.getBuySignal(ticker, sharePrice, tradingTime, TEST_ID)) {
                     orderCommandService.order(
                             TEST_ID, ticker, OrderDvsnCode.BUY, KisOrderDvsnCode.MARKET_ORDER, sharePrice);
                 }
@@ -201,8 +200,6 @@ public class SocketProcessService {
             String refuseCode = result[12];
             String tradeResultCode = result[13];
 
-//            log.info("[실시간 체결 통보] 마지막 주문 내역 조회 전 ");
-
             Optional<Order> optLastOrder = orderQueryService.getLastOrder(TEST_ID, ticker);
 
             if (optLastOrder.isEmpty()) {
@@ -212,15 +209,11 @@ public class SocketProcessService {
 
             Order lastOrder = optLastOrder.get();
 
-//            log.info("[실시간 체결 통보] 마지막 주문 내역 조회 후 order: {}", lastOrder);
-
             if (lastOrder.isTrading()) {
                 throw new RuntimeException("[주문 내역 조회 실패] 미체결 주문 정보 존재하지 않음 - 마지막 주문 정보 : " + lastOrder);
             }
 
             if (tradeResultCode.equals(TRADE_RES_CODE_ORDER_TRANSMISSION)) {
-//                log.info("[실시간 체결 통보] 주문 접수 된 주문 order: {}", lastOrder);
-
                 CreateTradingHistoryCommand createTradingHistoryCommand = CreateTradingHistoryCommand.builder()
                         .ticker(ticker)
                         .orderDvsnCode(orderDvsnCode)
@@ -238,9 +231,7 @@ public class SocketProcessService {
                 lastOrder.updateOrderStatus(OrderStatus.ORDER_SUCCESS);
                 Order updatedOrder = orderRepository.save(lastOrder);
 
-//                log.info("[실시간 체결 통보] 주문 접수 된 주문 DB 저장 완료 order: {}", updatedOrder);
             } else if (tradeResultCode.equals(TRADE_RES_CODE_TRADE_COMPLETION)) {
-//                log.info("[실시간 체결 통보] 체결 완료 된 주문 order: {}", lastOrder);
 
                 if (ObjectUtils.isEmpty(tradingHistoryQueryService.getTradingHistoryList(ticker))) {
                     throw new RuntimeException("[실시간 체결 통보] 주문 접수 내역이 존재하지 않습니다.");
@@ -249,6 +240,16 @@ public class SocketProcessService {
                 lastOrder.updateOrderPrice(Integer.parseInt(tradingPrice));
                 lastOrder.updateOrderStatus(OrderStatus.TRADE_SUCCESS);
                 Order updatedOrder = orderRepository.save(lastOrder);
+
+                CalculateTradeReturnCommand calculateTradeReturnCommand = CalculateTradeReturnCommand.builder()
+                        .accountId(kisAccount.getAccountId())
+                        .ticker(ticker)
+                        .orderDvsnCode(orderDvsnCode)
+                        .tradingPrice(Integer.parseInt(tradingPrice))
+                        .tradingQty(Integer.parseInt(tradingQty))
+                        .build();
+
+                tradeReturnCommandService.calculateTradeReturn(calculateTradeReturnCommand);
 
 //                log.info("[실시간 체결 통보] 체결 완료 된 주문 DB 저장 완료 order: {}", updatedOrder);
             }

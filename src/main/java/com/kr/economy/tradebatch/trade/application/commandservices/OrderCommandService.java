@@ -53,7 +53,7 @@ public class OrderCommandService {
                       OrderDvsnCode orderDvsnCode,
                       KisOrderDvsnCode kisOrderDvsnCode,
                       int sharePrice) {
-        String orderDvsnName = OrderDvsnCode.BUY.equals(orderDvsnCode) ? "매수" : "매도";
+//        String orderDvsnName = OrderDvsnCode.BUY.equals(orderDvsnCode) ? "매수" : "매도";
         String trId = "";
 
         if (OrderDvsnCode.BUY.equals(orderDvsnCode)) {
