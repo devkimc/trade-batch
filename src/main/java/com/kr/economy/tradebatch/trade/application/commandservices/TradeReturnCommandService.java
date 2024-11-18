@@ -29,23 +29,19 @@ public class TradeReturnCommandService {
                 .tradeDate(DateUtil.toNonHyphenDay(LocalDateTime.now()))
                 .build();
 
-        Optional<TradeReturn> optTradeReturn = tradeReturnRepository.findById(tradeReturnId);
+        TradeReturn tradeReturn = tradeReturnRepository.findById(tradeReturnId)
+                .orElseGet(
+                        () -> TradeReturn.builder()
+                                .tradeReturnId(tradeReturnId)
+                                .totalBuyPrice(0)
+                                .totalSellPrice(0)
+                                .build()
+                );
 
-        if (optTradeReturn.isEmpty()) {
-            TradeReturn initialTradeReturn = TradeReturn.builder()
-                    .tradeReturnId(tradeReturnId)
-                    .totalBuyPrice(0)
-                    .totalSellPrice(0)
-                    .build();
-            tradeReturnRepository.save(initialTradeReturn);
-        } else {
-            TradeReturn tradeReturn = optTradeReturn.get();
+        tradeReturn.addTradePrice(
+                OrderDvsnCode.find(calculateTradeReturnCommand.getOrderDvsnCode()),
+                calculateTradeReturnCommand.getTradingPrice());
 
-            tradeReturn.addTradePrice(
-                    OrderDvsnCode.find(calculateTradeReturnCommand.getOrderDvsnCode()),
-                    calculateTradeReturnCommand.getTradingPrice());
-
-            tradeReturnRepository.save(tradeReturn);
-        }
+        tradeReturnRepository.save(tradeReturn);
     }
 }
