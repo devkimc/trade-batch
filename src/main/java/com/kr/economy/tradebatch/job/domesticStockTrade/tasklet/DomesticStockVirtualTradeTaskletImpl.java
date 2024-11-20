@@ -52,20 +52,20 @@ public class DomesticStockVirtualTradeTaskletImpl implements DomesticStockTradeT
 
             final WebSocketClientEndPoint clientEndPoint = new WebSocketClientEndPoint(socketProcessService);
 
-            // 삼성 체결가 조회 요청
+            // 삼성 전자 체결가 조회 요청
             clientEndPoint.sendMessage(getRealTimeReqJson(kisAccount, TR_ID_H0STCNT0, TICKER_SAMSUNG_ELECTRONICS));
             Thread.sleep(5000);
 
-            // 하이닉스 체결가 조회 요청
-            clientEndPoint.sendMessage(getRealTimeReqJson(kisAccount, TR_ID_H0STCNT0, TICKER_SK_HYNIX));
+            // 현대 차 조회 요청
+            clientEndPoint.sendMessage(getRealTimeReqJson(kisAccount, TR_ID_H0STCNT0, TICKER_HD_CAR));
             Thread.sleep(5000);
 
-            // KODEX200 선물인버스2X 체결가 조회 요청
-            clientEndPoint.sendMessage(getRealTimeReqJson(kisAccount, TR_ID_H0STCNT0, TICKER_KODEX200_FUTURES_INVERSE_2X));
+            // 현대 모비스 체결가 조회 요청
+            clientEndPoint.sendMessage(getRealTimeReqJson(kisAccount, TR_ID_H0STCNT0, TICKER_HD_MOBIS));
             Thread.sleep(5000);
 
-            // TIGER 미국S&P500 체결가 조회 요청
-            clientEndPoint.sendMessage(getRealTimeReqJson(kisAccount, TR_ID_H0STCNT0, TICKER_TIGER_USA_SP500));
+            // 삼성 SDI 체결가 조회 요청
+            clientEndPoint.sendMessage(getRealTimeReqJson(kisAccount, TR_ID_H0STCNT0, TICKER_SDI));
             Thread.sleep(5000);
 
             // 체결 통보 조회 요청

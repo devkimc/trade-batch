@@ -92,7 +92,7 @@ public class SocketProcessService {
                 KisAccount kisAccount = kisAccountQueryService.getKisAccount(TEST_ID);
                 kisAccount.updateSocketDecryptKey(output.getIv(), output.getKey());
                 kisAccountRepository.save(kisAccount);
-                log.info("[Socket response] 복호화 값 저장 성공 iv : {}, key : {}", kisAccount.getSocketDecryptIv(), kisAccount.getSocketDecryptKey());
+//                log.info("[Socket response] 복호화 값 저장 성공 iv : {}, key : {}", kisAccount.getSocketDecryptIv(), kisAccount.getSocketDecryptKey());
                 return;
             }
 
@@ -151,7 +151,7 @@ public class SocketProcessService {
                             TEST_ID, ticker, OrderDvsnCode.SELL, KisOrderDvsnCode.MARKET_ORDER, sharePrice);
                 }
             } else {
-                if (koreaStockOrderQueryService.getBuySignal(ticker, sharePrice, tradingTime, TEST_ID)) {
+                if (koreaStockOrderQueryService.getBuySignal(ticker, sharePrice, tradingTime, TEST_ID, message)) {
                     orderCommandService.order(
                             TEST_ID, ticker, OrderDvsnCode.BUY, KisOrderDvsnCode.MARKET_ORDER, sharePrice);
                 }
@@ -187,7 +187,7 @@ public class SocketProcessService {
                 return;
             }
 
-//            log.info("[실시간 체결 통보 응답] : " + tradeResult);
+            log.info("[실시간 체결 통보 응답] : {}", tradeResult);
             String kisId = result[0];
             String kisOrderId = result[2];
             String kisOrOrderID = result[3];

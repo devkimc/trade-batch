@@ -31,7 +31,7 @@ public class KoreaStockOrderQueryService {
      * @param ticker 종목 코드
      * @return  매수 여부
      */
-    public boolean getBuySignal(String ticker, int sharePrice, String tradingTime, String accountId) {
+    public boolean getBuySignal(String ticker, int sharePrice, String tradingTime, String accountId, String message) {
         boolean isBuySignal;
 
         try {
@@ -120,6 +120,7 @@ public class KoreaStockOrderQueryService {
 
             int expectedBuyPrice = sharePrice + stockItemInfo.getParValue();
             log.info("[매수] 잔1 : {} | 잔2 : {} | 잔3 : {} | 체결 가격 : {} | 거래 시간 : {}", bidAskBalanceRatioGap, reBidAskBalanceRatioGap, re3BidAskBalanceRatioGap, expectedBuyPrice, tradingTime);
+            log.info(message);
 
         } catch (RuntimeException re) {
             throw new RuntimeException("[매수 신호 조회 실패]: {}", re);

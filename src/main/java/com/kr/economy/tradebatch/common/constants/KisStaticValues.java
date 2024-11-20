@@ -27,10 +27,12 @@ public class KisStaticValues {
 
     /* 종목 코드 */
     public static final String TICKER_SAMSUNG_ELECTRONICS = "005930";
-    public static final String TICKER_SK_HYNIX = "000660";
+//    public static final String TICKER_SK_HYNIX = "000660";
     public static final String TICKER_HD_CAR = "005380";
-    public static final String TICKER_KODEX200_FUTURES_INVERSE_2X = "252670";   // KODEX 200선물인버스2X
-    public static final String TICKER_TIGER_USA_SP500 = "360750";               // TIGER 미국S&P500
+    public static final String TICKER_HD_MOBIS = "012330";
+    public static final String TICKER_SDI = "006400";
+//    public static final String TICKER_KODEX200_FUTURES_INVERSE_2X = "252670";   // KODEX 200선물인버스2X
+//    public static final String TICKER_TIGER_USA_SP500 = "360750";               // TIGER 미국S&P500
 
     /* 고객 타입 */
     public static final String CUST_TYPE_PERSONAL = "P";

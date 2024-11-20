@@ -85,7 +85,7 @@ public class TradeBatchApplicationTests {
 					tradingHistoryCommandService.createTradingHistory(createTradingHistoryCommand);
 				}
 			} else {
-				if (koreaStockOrderQueryService.getBuySignal(ticker, sharePrice, tradingTime, TEST_ID)) {
+				if (koreaStockOrderQueryService.getBuySignal(ticker, sharePrice, tradingTime, TEST_ID ,"")) {
 					CreateTradingHistoryCommand createTradingHistoryCommand = CreateTradingHistoryCommand.builder()
 							.ticker(ticker)
 							.orderDvsnCode("02")

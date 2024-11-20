@@ -53,7 +53,7 @@ public class OrderCommandService {
                       OrderDvsnCode orderDvsnCode,
                       KisOrderDvsnCode kisOrderDvsnCode,
                       int sharePrice) {
-//        String orderDvsnName = OrderDvsnCode.BUY.equals(orderDvsnCode) ? "매수" : "매도";
+        String orderDvsnName = OrderDvsnCode.BUY.equals(orderDvsnCode) ? "매수" : "매도";
         String trId = "";
 
         if (OrderDvsnCode.BUY.equals(orderDvsnCode)) {
@@ -104,7 +104,7 @@ public class OrderCommandService {
                 "P",
                 orderInCashReqDto
         );
-//        log.info("[{} 주문] 결과: {}", orderDvsnName, orderInCashResDto);
+        log.info("[{} 주문] 결과: {}", orderDvsnName, orderInCashResDto);
 
         if (!"0".equals(orderInCashResDto.getRt_cd())) {
             throw new RuntimeException(orderInCashResDto.toString());
