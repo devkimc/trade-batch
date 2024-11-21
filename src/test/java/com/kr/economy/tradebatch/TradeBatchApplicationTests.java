@@ -1,14 +1,14 @@
 package com.kr.economy.tradebatch;
 
-import com.kr.economy.tradebatch.trade.application.CreateTradingHistoryCommand;
+import com.kr.economy.tradebatch.trade.domain.model.commands.CreateTradingHistoryCommand;
 import com.kr.economy.tradebatch.trade.application.SocketProcessService;
-import com.kr.economy.tradebatch.trade.application.commandservices.SharePriceHistoryCommandService;
+import com.kr.economy.tradebatch.trade.application.commandservices.StockQuotesCommandService;
 import com.kr.economy.tradebatch.trade.application.commandservices.TradingHistoryCommandService;
 import com.kr.economy.tradebatch.trade.application.queryservices.KoreaStockOrderQueryService;
 import com.kr.economy.tradebatch.trade.application.queryservices.StockItemInfoQueryService;
 import com.kr.economy.tradebatch.trade.application.queryservices.TradingHistoryQueryService;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.*;
-import com.kr.economy.tradebatch.trade.domain.repositories.SharePriceHistorySimRepository;
+import com.kr.economy.tradebatch.trade.domain.repositories.StockQuotesSimRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,7 +22,7 @@ import static com.kr.economy.tradebatch.common.constants.KisStaticValues.TEST_ID
 public class TradeBatchApplicationTests {
 
 	@Autowired
-	private SharePriceHistoryCommandService sharePriceHistoryCommandService;
+	private StockQuotesCommandService stockQuotesCommandService;
 
 	@Autowired
 	private TradingHistoryCommandService tradingHistoryCommandService;
@@ -34,7 +34,7 @@ public class TradeBatchApplicationTests {
 	private TradingHistoryQueryService tradingHistoryQueryService;
 
 	@Autowired
-	private SharePriceHistorySimRepository sharePriceHistorySimRepository;
+	private StockQuotesSimRepository stockQuotesSimRepository;
 
 	@Autowired
 	private SocketProcessService socketProcessService;
@@ -46,23 +46,23 @@ public class TradeBatchApplicationTests {
 	public void buySignTest() throws Exception {
 
 		// 배치 실행 전 데이터 초기화
-		sharePriceHistoryCommandService.deleteHistory();
+		stockQuotesCommandService.deleteHistory();
 		tradingHistoryCommandService.deleteHistory();
 		System.out.println("데이터 초기화");
 
 		// DB 테이블로 테스트 시
-		List<SharePriceHistorySim> sharePriceHistoryList = sharePriceHistorySimRepository.findAll();
+		List<StockQuotesSim> stockQuotes = stockQuotesSimRepository.findAll();
 
-		for (int i = 0; i < sharePriceHistoryList.size(); i++) {
-			SharePriceHistorySim sharePriceData = sharePriceHistoryList.get(i);
+		for (int i = 0; i < stockQuotes.size(); i++) {
+			StockQuotesSim sharePriceData = stockQuotes.get(i);
 
 			String ticker = sharePriceData.getTicker();
 			String tradingTime = sharePriceData.getTradingTime();
-			int sharePrice = sharePriceData.getSharePrice();
+			int sharePrice = sharePriceData.getQuotedPrice();
 			Float bidAskBalanceRatio = sharePriceData.getBidAskBalanceRatio();
 
 			// 실시간 현재가 저장
-			sharePriceHistoryCommandService.createSharePriceHistory(ticker, sharePrice, bidAskBalanceRatio, tradingTime);
+			stockQuotesCommandService.createStockQuote(ticker, sharePrice, bidAskBalanceRatio, tradingTime);
 
 			// 당일 마지막 체결 내역 조회
 			Optional<TradingHistory> lastTradingHistory = tradingHistoryQueryService.getLastHistoryOfToday(ticker);

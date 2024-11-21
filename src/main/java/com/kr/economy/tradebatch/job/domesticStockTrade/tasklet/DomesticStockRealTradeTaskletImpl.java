@@ -3,7 +3,7 @@ package com.kr.economy.tradebatch.job.domesticStockTrade.tasklet;
 import com.kr.economy.tradebatch.config.WebSocketClientEndPoint;
 import com.kr.economy.tradebatch.trade.application.SocketProcessService;
 import com.kr.economy.tradebatch.trade.application.commandservices.OrderCommandService;
-import com.kr.economy.tradebatch.trade.application.commandservices.SharePriceHistoryCommandService;
+import com.kr.economy.tradebatch.trade.application.commandservices.StockQuotesCommandService;
 import com.kr.economy.tradebatch.trade.application.commandservices.TradingHistoryCommandService;
 import com.kr.economy.tradebatch.trade.application.queryservices.KisAccountQueryService;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.KisAccount;
@@ -29,7 +29,7 @@ public class DomesticStockRealTradeTaskletImpl implements DomesticStockTradeTask
     @Value("${credential.kis.trade.his-id}")
     private String hisId;
 
-    private final SharePriceHistoryCommandService sharePriceHistoryCommandService;
+    private final StockQuotesCommandService stockQuotesCommandService;
     private final TradingHistoryCommandService tradingHistoryCommandService;
     private final SocketProcessService socketProcessService;
     private final KisAccountQueryService kisAccountQueryService;
@@ -46,7 +46,7 @@ public class DomesticStockRealTradeTaskletImpl implements DomesticStockTradeTask
 
             // 전일 히스토리 초기화
             orderCommandService.deleteHistory();
-            sharePriceHistoryCommandService.deleteHistory();
+            stockQuotesCommandService.deleteHistory();
             tradingHistoryCommandService.deleteHistory();
 
             final WebSocketClientEndPoint clientEndPoint = new WebSocketClientEndPoint(socketProcessService);

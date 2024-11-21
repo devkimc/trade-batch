@@ -1,4 +1,4 @@
-package com.kr.economy.tradebatch.trade.application;
+package com.kr.economy.tradebatch.trade.domain.model.commands;
 
 import lombok.*;
 

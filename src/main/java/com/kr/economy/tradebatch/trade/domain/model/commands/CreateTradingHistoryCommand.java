@@ -1,6 +1,5 @@
-package com.kr.economy.tradebatch.trade.application;
+package com.kr.economy.tradebatch.trade.domain.model.commands;
 
-import com.kr.economy.tradebatch.trade.domain.constants.KisOrderDvsnCode;
 import lombok.*;
 
 @Getter

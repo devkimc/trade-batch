@@ -1,6 +1,6 @@
 package com.kr.economy.tradebatch.util;
 
-import com.kr.economy.tradebatch.trade.application.CreateTradingHistoryCommand;
+import com.kr.economy.tradebatch.trade.domain.model.commands.CreateTradingHistoryCommand;
 import com.kr.economy.tradebatch.trade.application.SocketProcessService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

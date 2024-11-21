@@ -6,7 +6,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
@@ -19,7 +18,7 @@ import java.time.LocalDateTime;
 @ToString
 @EntityListeners(AuditingEntityListener.class)
 @Slf4j
-public class SharePriceHistorySim {
+public class StockQuotesSim {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,7 +28,7 @@ public class SharePriceHistorySim {
     private String ticker;                  // 종목 코드
 
     @Column
-    private int sharePrice;                 // 주가 (현재가, 체결가)
+    private int quotedPrice;                 // 주가 (현재가, 체결가)
 
     @Column
     private PriceTrendType priceTrendType;  // 가격 추세 유형

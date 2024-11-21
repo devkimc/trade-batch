@@ -1,4 +1,4 @@
-package com.kr.economy.tradebatch.trade.application;
+package com.kr.economy.tradebatch.trade.domain.model.commands;
 
 import com.kr.economy.tradebatch.trade.domain.constants.KisOrderDvsnCode;
 import com.kr.economy.tradebatch.trade.domain.constants.OrderDvsnCode;
@@ -17,7 +17,7 @@ public class OrderInCashCommand {
     private String ticker;
     private String trId;
     private OrderDvsnCode orderDvsnCode;
-    private int sharePrice;
+    private int quotedPrice;
     private int orderPrice;
     private int qty;
     private KisOrderDvsnCode kisOrderDvsnCode;

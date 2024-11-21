@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kr.economy.tradebatch.config.SocketResultDto;
 import com.kr.economy.tradebatch.trade.application.commandservices.OrderCommandService;
-import com.kr.economy.tradebatch.trade.application.commandservices.SharePriceHistoryCommandService;
+import com.kr.economy.tradebatch.trade.application.commandservices.StockQuotesCommandService;
 import com.kr.economy.tradebatch.trade.application.commandservices.TradeReturnCommandService;
 import com.kr.economy.tradebatch.trade.application.commandservices.TradingHistoryCommandService;
 import com.kr.economy.tradebatch.trade.application.queryservices.*;
@@ -13,7 +13,8 @@ import com.kr.economy.tradebatch.trade.domain.constants.OrderDvsnCode;
 import com.kr.economy.tradebatch.trade.domain.constants.OrderStatus;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.KisAccount;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.Order;
-import com.kr.economy.tradebatch.trade.domain.model.aggregates.TradingHistory;
+import com.kr.economy.tradebatch.trade.domain.model.commands.CalculateTradeReturnCommand;
+import com.kr.economy.tradebatch.trade.domain.model.commands.CreateTradingHistoryCommand;
 import com.kr.economy.tradebatch.trade.domain.repositories.KisAccountRepository;
 import com.kr.economy.tradebatch.trade.domain.repositories.OrderRepository;
 import com.kr.economy.tradebatch.util.AES256;
@@ -36,7 +37,7 @@ import static com.kr.economy.tradebatch.common.constants.KisStaticValues.*;
 @Transactional
 public class SocketProcessService {
 
-    private final SharePriceHistoryCommandService sharePriceHistoryCommandService;
+    private final StockQuotesCommandService stockQuotesCommandService;
     private final TradingHistoryCommandService tradingHistoryCommandService;
     private final TradingHistoryQueryService tradingHistoryQueryService;
     private final KoreaStockOrderQueryService koreaStockOrderQueryService;
@@ -127,11 +128,11 @@ public class SocketProcessService {
         try {
             String ticker = result[0];
             String tradingTime = result[1];
-            int sharePrice = Integer.parseInt(result[2]);
+            int quotedPrice = Integer.parseInt(result[2]);
             float bidAskBalanceRatio = Float.parseFloat(result[37]) / Float.parseFloat(result[36]);
 
             // 실시간 현재가 저장
-            sharePriceHistoryCommandService.createSharePriceHistory(ticker, sharePrice, bidAskBalanceRatio, tradingTime);
+            stockQuotesCommandService.createStockQuote(ticker, quotedPrice, bidAskBalanceRatio, tradingTime);
 
             // 미체결 주문 내역이 존재할 경우 주문하지 않음
             if (orderQueryService.existsNotTradingOrder(TEST_ID, ticker)) {
@@ -145,15 +146,15 @@ public class SocketProcessService {
             // 마지막 체결 내역이 매수일 경우에만 매도
             if (lastTradingHistory.isPresent() && lastTradingHistory.get().isCompletedBuyTrading()) {
                 int orderPrice = lastTradingHistory.get().getOrderPrice();
-                if (koreaStockOrderQueryService.getSellSignal(ticker, sharePrice, orderPrice, tradingTime)) {
+                if (koreaStockOrderQueryService.getSellSignal(ticker, quotedPrice, orderPrice, tradingTime)) {
 
                     orderCommandService.order(
-                            TEST_ID, ticker, OrderDvsnCode.SELL, KisOrderDvsnCode.MARKET_ORDER, sharePrice);
+                            TEST_ID, ticker, OrderDvsnCode.SELL, KisOrderDvsnCode.MARKET_ORDER, quotedPrice);
                 }
             } else {
-                if (koreaStockOrderQueryService.getBuySignal(ticker, sharePrice, tradingTime, TEST_ID, message)) {
+                if (koreaStockOrderQueryService.getBuySignal(ticker, quotedPrice, tradingTime, TEST_ID, message)) {
                     orderCommandService.order(
-                            TEST_ID, ticker, OrderDvsnCode.BUY, KisOrderDvsnCode.MARKET_ORDER, sharePrice);
+                            TEST_ID, ticker, OrderDvsnCode.BUY, KisOrderDvsnCode.MARKET_ORDER, quotedPrice);
                 }
             }
         }

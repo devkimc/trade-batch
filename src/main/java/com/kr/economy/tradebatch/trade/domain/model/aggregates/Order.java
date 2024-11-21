@@ -40,7 +40,7 @@ public class Order {
     private OrderDvsnCode orderDvsnCode;        // 주문 구분 코드 (매수 / 매도)
 
     @Column
-    private int sharePrice;                     // 주문 시 주가
+    private int quotedPrice;                     // 주문 시 주가
 
     @Column
     private int orderPrice;                   // 시장가 주문의 경우 0

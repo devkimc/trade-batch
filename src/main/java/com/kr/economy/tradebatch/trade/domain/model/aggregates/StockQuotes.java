@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @ToString
 @EntityListeners(AuditingEntityListener.class)
 @Slf4j
-public class SharePriceHistory {
+public class StockQuotes {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,7 +28,7 @@ public class SharePriceHistory {
     private String ticker;                  // 종목 코드
 
     @Column
-    private int sharePrice;                 // 주가 (현재가, 체결가)
+    private int quotedPrice;                 // 주가 (현재가, 체결가)
 
     @Column
     private PriceTrendType priceTrendType;  // 가격 추세 유형
@@ -50,9 +50,9 @@ public class SharePriceHistory {
      * 초기 값
      * @param
      */
-    public SharePriceHistory(String ticker, int sharePrice, Float bidAskBalanceRatio, String tradingTime) {
+    public StockQuotes(String ticker, int quotedPrice, Float bidAskBalanceRatio, String tradingTime) {
         this.ticker = ticker;
-        this.sharePrice = sharePrice;
+        this.quotedPrice = quotedPrice;
         this.priceTrendType = PriceTrendType.NONE;
         this.bidAskBalanceRatio = bidAskBalanceRatio;
         this.bidAskBalanceTrendType = BidAskBalanceTrendType.NONE;
@@ -62,19 +62,19 @@ public class SharePriceHistory {
 
     /**
      * 주가 증감 추이 확인
-     * @param curSharePrice
+     * @param curQuotedPrice
      * @return
      */
-    public PriceTrendType getNextPriceTrendType(int curSharePrice) {
+    public PriceTrendType getNextPriceTrendType(int curQuotedPrice) {
         PriceTrendType nextPriceTrend;
 
-        if (curSharePrice == 0) {
+        if (curQuotedPrice == 0) {
             throw new RuntimeException("[주가 증감 추이 확인 에러] - 주가 0원");
         }
 
-        if (curSharePrice > this.sharePrice) {
+        if (curQuotedPrice > this.quotedPrice) {
             nextPriceTrend = PriceTrendType.INCREASE;
-        } else if (curSharePrice < this.sharePrice) {
+        } else if (curQuotedPrice < this.quotedPrice) {
             nextPriceTrend = PriceTrendType.DECREASE;
         } else {
             nextPriceTrend = PriceTrendType.FREEZING;

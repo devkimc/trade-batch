@@ -1,7 +1,7 @@
 package com.kr.economy.tradebatch.trade.application.commandservices;
 
 import com.kr.economy.tradebatch.common.util.DateUtil;
-import com.kr.economy.tradebatch.trade.application.CalculateTradeReturnCommand;
+import com.kr.economy.tradebatch.trade.domain.model.commands.CalculateTradeReturnCommand;
 import com.kr.economy.tradebatch.trade.domain.constants.OrderDvsnCode;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.TradeReturn;
 import com.kr.economy.tradebatch.trade.domain.model.valueObject.TradeReturnId;
@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Transactional
 @Service

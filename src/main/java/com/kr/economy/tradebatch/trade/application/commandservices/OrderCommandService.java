@@ -46,13 +46,13 @@ public class OrderCommandService {
      * @param ticker
      * @param orderDvsnCode
      * @param kisOrderDvsnCode
-     * @param sharePrice
+     * @param quotedPrice
      */
     public void order(String accountId,
                       String ticker,
                       OrderDvsnCode orderDvsnCode,
                       KisOrderDvsnCode kisOrderDvsnCode,
-                      int sharePrice) {
+                      int quotedPrice) {
         String orderDvsnName = OrderDvsnCode.BUY.equals(orderDvsnCode) ? "매수" : "매도";
         String trId = "";
 
@@ -77,7 +77,7 @@ public class OrderCommandService {
                 .ticker(ticker)
                 .orderStatus(OrderStatus.REQUEST)
                 .orderDvsnCode(orderDvsnCode)
-                .sharePrice(sharePrice)
+                .quotedPrice(quotedPrice)
                 .orderPrice(0)
                 .orderQty(1)
                 .kisOrderDvsnCode(kisOrderDvsnCode)

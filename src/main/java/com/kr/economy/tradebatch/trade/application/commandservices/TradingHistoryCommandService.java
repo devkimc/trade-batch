@@ -1,6 +1,6 @@
 package com.kr.economy.tradebatch.trade.application.commandservices;
 
-import com.kr.economy.tradebatch.trade.application.CreateTradingHistoryCommand;
+import com.kr.economy.tradebatch.trade.domain.model.commands.CreateTradingHistoryCommand;
 import com.kr.economy.tradebatch.trade.domain.constants.KisOrderDvsnCode;
 import com.kr.economy.tradebatch.trade.domain.constants.OrderDvsnCode;
 import com.kr.economy.tradebatch.trade.domain.constants.TradingResultType;

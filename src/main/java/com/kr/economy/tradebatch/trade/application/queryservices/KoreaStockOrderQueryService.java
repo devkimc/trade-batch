@@ -3,11 +3,11 @@ package com.kr.economy.tradebatch.trade.application.queryservices;
 import com.kr.economy.tradebatch.common.util.DateUtil;
 import com.kr.economy.tradebatch.trade.domain.constants.BidAskBalanceTrendType;
 import com.kr.economy.tradebatch.trade.domain.constants.PriceTrendType;
-import com.kr.economy.tradebatch.trade.domain.model.aggregates.SharePriceHistory;
+import com.kr.economy.tradebatch.trade.domain.model.aggregates.StockQuotes;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.StockItemInfo;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.TradeReturn;
-import com.kr.economy.tradebatch.trade.domain.repositories.SharePriceHistoryRepository;
-import com.kr.economy.tradebatch.trade.infrastructure.repositories.SharePriceHistoryRepositoryCustom;
+import com.kr.economy.tradebatch.trade.domain.repositories.StockQuotesRepository;
+import com.kr.economy.tradebatch.trade.infrastructure.repositories.StockQuotesRepositoryCustom;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,9 +21,9 @@ import java.util.Optional;
 @Slf4j
 public class KoreaStockOrderQueryService {
 
-    private final SharePriceHistoryRepositoryCustom sharePriceHistoryRepositoryCustom;
+    private final StockQuotesRepositoryCustom stockQuotesRepositoryCustom;
     private final StockItemInfoQueryService stockItemInfoQueryService;
-    private final SharePriceHistoryRepository sharePriceHistoryRepository;
+    private final StockQuotesRepository stockQuotesRepository;
     private final TradeReturnQueryService tradeReturnQueryService;
 
     /**
@@ -31,28 +31,28 @@ public class KoreaStockOrderQueryService {
      * @param ticker 종목 코드
      * @return  매수 여부
      */
-    public boolean getBuySignal(String ticker, int sharePrice, String tradingTime, String accountId, String message) {
+    public boolean getBuySignal(String ticker, int quotedPrice, String tradingTime, String accountId, String message) {
         boolean isBuySignal;
 
         try {
             // 최근 주가 변동 내역 조회
-            List<SharePriceHistory> recentSharePriceHistory = sharePriceHistoryRepositoryCustom.getRecentTrendHistory(ticker);
+            List<StockQuotes> recentStockQuotes = stockQuotesRepositoryCustom.getRecentTrendHistory(ticker);
 
-            if (recentSharePriceHistory.size() < 3) {
+            if (recentStockQuotes.size() < 3) {
                 log.debug("데이터 부족");
                 return false;
             }
 
             // 마지막 내역의 매수매도 잔량비가 증가일 경우에만 매수
-            SharePriceHistory lastSharePriceHistory = recentSharePriceHistory.get(recentSharePriceHistory.size() - 1);
-            isBuySignal = BidAskBalanceTrendType.INCREASE.equals(lastSharePriceHistory.getBidAskBalanceTrendType());
+            StockQuotes lastStockQuotes = recentStockQuotes.get(recentStockQuotes.size() - 1);
+            isBuySignal = BidAskBalanceTrendType.INCREASE.equals(lastStockQuotes.getBidAskBalanceTrendType());
 
             if (!isBuySignal) {
                 return false;
             }
 
             // 현재가 추이가 3회 연속 감소일 경우 매수
-            isBuySignal = recentSharePriceHistory.stream().allMatch(
+            isBuySignal = recentStockQuotes.stream().allMatch(
                     h -> PriceTrendType.DECREASE.equals(h.getPriceTrendType())
             );
 
@@ -100,25 +100,25 @@ public class KoreaStockOrderQueryService {
 //            if (idGap >= 30) {
 //                return false;
 //            }
-            List<SharePriceHistory> top2ByTickerOrderByIdDesc = sharePriceHistoryRepository.findTop2ByTickerOrderByIdDesc(ticker);
+            List<StockQuotes> top2ByTickerOrderByIdDesc = stockQuotesRepository.findTop2ByTickerOrderByIdDesc(ticker);
 
             Float top1ByIdDesc = top2ByTickerOrderByIdDesc.get(top2ByTickerOrderByIdDesc.size() - 2).getBidAskBalanceRatio();
             Float top2ByIdDesc = top2ByTickerOrderByIdDesc.get(top2ByTickerOrderByIdDesc.size() - 1).getBidAskBalanceRatio();
             float bidAskBalanceRatioGap = Math.round((top1ByIdDesc - top2ByIdDesc) * 100 / 100.0);
 
-            Float reTop1ByDesc = recentSharePriceHistory.get(recentSharePriceHistory.size() - 3).getBidAskBalanceRatio();
-            Float reTop2ByDesc = recentSharePriceHistory.get(recentSharePriceHistory.size() - 2).getBidAskBalanceRatio();
+            Float reTop1ByDesc = recentStockQuotes.get(recentStockQuotes.size() - 3).getBidAskBalanceRatio();
+            Float reTop2ByDesc = recentStockQuotes.get(recentStockQuotes.size() - 2).getBidAskBalanceRatio();
             float reBidAskBalanceRatioGap = Math.round((reTop1ByDesc - reTop2ByDesc) * 100 / 100.0);
 
-            Float re3Top1ByDesc = recentSharePriceHistory.get(recentSharePriceHistory.size() - 3).getBidAskBalanceRatio();
-            Float re3Top2ByDesc = recentSharePriceHistory.get(recentSharePriceHistory.size() - 1).getBidAskBalanceRatio();
+            Float re3Top1ByDesc = recentStockQuotes.get(recentStockQuotes.size() - 3).getBidAskBalanceRatio();
+            Float re3Top2ByDesc = recentStockQuotes.get(recentStockQuotes.size() - 1).getBidAskBalanceRatio();
             float re3BidAskBalanceRatioGap = Math.round((re3Top1ByDesc - re3Top2ByDesc) * 100 / 100.0);
 
             if (bidAskBalanceRatioGap <= 0 || reBidAskBalanceRatioGap <= 0) {
                 return false;
             }
 
-            int expectedBuyPrice = sharePrice + stockItemInfo.getParValue();
+            int expectedBuyPrice = quotedPrice + stockItemInfo.getParValue();
             log.info("[매수] 잔1 : {} | 잔2 : {} | 잔3 : {} | 체결 가격 : {} | 거래 시간 : {}", bidAskBalanceRatioGap, reBidAskBalanceRatioGap, re3BidAskBalanceRatioGap, expectedBuyPrice, tradingTime);
             log.info(message);
 
@@ -133,18 +133,18 @@ public class KoreaStockOrderQueryService {
 
     /**
      * 매도 신호 여부
-     * @param sharePrice
+     * @param quotedPrice
      * @return
      */
-    public boolean getSellSignal(String ticker, int sharePrice, int buyPrice, String currentTradingTime) {
+    public boolean getSellSignal(String ticker, int quotedPrice, int buyPrice, String currentTradingTime) {
 
         StockItemInfo stockItemInfo = stockItemInfoQueryService.getStockItemInfo(ticker);
 
         int highPrice = buyPrice + stockItemInfo.getParValue() * 3;
         int lowPrice = buyPrice - stockItemInfo.getParValue() * 3;
 
-        boolean isHighPoint = sharePrice >= highPrice;
-        boolean isLowPoint = sharePrice <= lowPrice;
+        boolean isHighPoint = quotedPrice >= highPrice;
+        boolean isLowPoint = quotedPrice <= lowPrice;
 
         LocalDateTime now = LocalDateTime.now();
 
