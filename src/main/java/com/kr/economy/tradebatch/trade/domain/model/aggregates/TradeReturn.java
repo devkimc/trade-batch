@@ -55,7 +55,18 @@ public class TradeReturn {
     }
 
     // 손실 여부 반환
-    public boolean isLoss() {
+    public boolean isSufferedLoss() {
         return totalSellPrice - totalBuyPrice < 0;
+    }
+
+    /**
+     * 손실 한도 여부
+     * @param dailyLossLimitPrice
+     * @return
+     */
+    public boolean isLossLimit(int dailyLossLimitPrice) {
+
+        // 당일 손실 여부 && 당일 손실 금액 >= 당일 최대 손실 금액
+        return this.isSufferedLoss() && this.getLossPrice() >= dailyLossLimitPrice;
     }
 }

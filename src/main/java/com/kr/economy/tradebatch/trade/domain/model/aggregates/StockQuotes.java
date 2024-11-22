@@ -100,4 +100,12 @@ public class StockQuotes {
 
         return nextStatus;
     }
+
+    public boolean isDecreasedPrice() {
+        return PriceTrendType.DECREASE.equals(this.priceTrendType);
+    }
+
+    public boolean isIncreasedBidAskBalanceRatio() {
+        return BidAskBalanceTrendType.INCREASE.equals(this.bidAskBalanceTrendType);
+    }
 }

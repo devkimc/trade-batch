@@ -1,12 +1,8 @@
 package com.kr.economy.tradebatch.trade.domain.model.aggregates;
 
-import com.kr.economy.tradebatch.trade.domain.constants.BidAskBalanceTrendType;
-import com.kr.economy.tradebatch.trade.domain.constants.PriceTrendType;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -17,7 +13,6 @@ import java.time.LocalDateTime;
 public class StockItemInfo {
 
     @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private String ticker;                  // 종목 코드
 
     @Column
@@ -36,5 +31,68 @@ public class StockItemInfo {
      */
     public int getDailyLossLimitPrice() {
         return this.parValue * 10;
+    }
+
+    /**
+     * 손절매 필요 여부
+     * @param buyPrice
+     * @param quotedPrice
+     * @return
+     */
+    public boolean haveToStopLoss(int buyPrice, int quotedPrice) {
+        return quotedPrice <= buyPrice - this.parValue * 3;
+    }
+
+    /**
+     * 익절매 필요 여부
+     * @param buyPrice
+     * @param quotedPrice
+     * @return
+     */
+    public boolean haveToTakeProfit(int buyPrice, int quotedPrice) {
+        return quotedPrice >= buyPrice + this.parValue * 3;
+    }
+
+    /**
+     * 주식 판매 필요 여부
+     * @param buyPrice
+     * @param quotedPrice
+     * @return
+     */
+    public boolean haveToSell(int buyPrice, int quotedPrice, String tradingTime) {
+        LocalDateTime now = LocalDateTime.now();
+
+        // 오후 3시 25분일 경우 모두 매도
+        boolean isClosingTime = now.getHour() == 15 && now.getMinute() >= 25;
+
+        if (isClosingTime) {
+            log.info("[매도 신호] 장 마감 시간 임박 : {}", now);
+            return false;
+        }
+
+        return this.haveToStopLoss(buyPrice, quotedPrice) || this.haveToTakeProfit(buyPrice, quotedPrice);
+
+        // 매수 후 13분 초과 시 매도 로직 중단
+//        String mm = String.valueOf(now.getMonth().getValue());
+//        String dd = String.valueOf(now.getDayOfMonth());
+//
+//        if (mm.length() == 1) {
+//            mm = "0" + mm;
+//        }
+//
+//        if (dd.length() == 1) {
+//            dd = "0" + dd;
+//        }
+//
+//        LocalDate date = LocalDate.parse(now.getYear() + "-" + mm + "-" + dd);
+//        LocalDateTime tradingLdt = date.atTime(Integer.parseInt(tradingTime.substring(0, 2)), Integer.parseInt(tradingTime.substring(2, 4)), Integer.parseInt(tradingTime.substring(4, 6)));
+//        LocalDateTime currentTradingLdt = date.atTime(Integer.parseInt(currentTradingTime.substring(0, 2)), Integer.parseInt(currentTradingTime.substring(2, 4)), Integer.parseInt(currentTradingTime.substring(4, 6)));
+//
+//        // 매수 후 13분 초과 시 매도
+//        boolean isLimitTimeout = currentTradingLdt.isAfter(tradingLdt.plusMinutes(13));
+
+//        if (isLimitTimeout) {
+//            log.info("[매도 신호] 매수 후 13분 초과 - 매수 시간 : {}", tradingTime);
+//        }
     }
 }
