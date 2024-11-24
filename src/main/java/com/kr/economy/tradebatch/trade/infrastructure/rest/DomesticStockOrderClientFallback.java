@@ -5,8 +5,6 @@ import com.kr.economy.tradebatch.trade.infrastructure.rest.dto.OrderInCashResDto
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
 @Slf4j
 @Component
 public class DomesticStockOrderClientFallback implements DomesticStockOrderClient{
@@ -35,13 +33,13 @@ public class DomesticStockOrderClientFallback implements DomesticStockOrderClien
 
         OrderInCashResDto.OutPut defaultOutput = OrderInCashResDto.OutPut
                 .builder()
-                .ODNO("")
+                .odno("")
                 .build();
 
         OrderInCashResDto orderInCashResDto = OrderInCashResDto.builder()
                 .output(defaultOutput)
-                .rt_cd("-1")
-                .msg1("[DomesticStockOrderClient 에러] fallback called")
+                .resultCode("-1")
+                .msg("[DomesticStockOrderClient 에러] fallback called")
                 .build();
 
         return orderInCashResDto;

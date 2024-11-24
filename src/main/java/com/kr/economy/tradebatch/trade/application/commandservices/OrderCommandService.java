@@ -106,7 +106,7 @@ public class OrderCommandService {
         );
         log.info("[{} 주문] 결과: {}", orderDvsnName, orderInCashResDto);
 
-        if (!"0".equals(orderInCashResDto.getRt_cd())) {
+        if (!"0".equals(orderInCashResDto.getResultCode())) {
             throw new RuntimeException(orderInCashResDto.toString());
         }
     }

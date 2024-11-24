@@ -1,5 +1,6 @@
 package com.kr.economy.tradebatch.trade.infrastructure.rest.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 @Getter
@@ -9,5 +10,6 @@ import lombok.*;
 @ToString
 public class OauthSocketResDto {
 
-    private String approval_key;
+    @JsonProperty("approval_key")
+    private String approvalKey;
 }

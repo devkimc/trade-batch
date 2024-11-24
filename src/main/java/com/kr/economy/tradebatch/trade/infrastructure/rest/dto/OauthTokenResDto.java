@@ -1,5 +1,6 @@
 package com.kr.economy.tradebatch.trade.infrastructure.rest.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 @Getter
@@ -8,8 +9,13 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 public class OauthTokenResDto {
-    private String access_token;
-    private String token_type;
-    private String expires_in;
-    private String access_token_token_expired;
+
+    @JsonProperty("access_token")
+    private String accessToken;
+    @JsonProperty("token_type")
+    private String tokenType;
+    @JsonProperty("expires_in")
+    private String expiresIn;
+    @JsonProperty("access_token_token_expired")
+    private String accessTokenTokenExpired;
 }

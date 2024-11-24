@@ -47,6 +47,7 @@ public class KisAccountCommandService {
         try {
             oauthTokenResDto = kisOauthClient.oauthToken(oauthTokenReqDto);
             oauthSocketResDto = kisOauthClient.oauthSocket(oauthSocketReqDto);
+
         } catch (RuntimeException rex) {
             log.error("[웹소켓 접속키 발급] 실패 accountId: {}", accountId);
             return null;
@@ -55,8 +56,8 @@ public class KisAccountCommandService {
         KisAccount account = kisAccountRepository.findByIdForUpdate(accountId);
         log.info("[트레이딩 봇] - 토큰 발급 전 사용자 정보 : {}", account);
 
-        account.renewAccessToken(oauthTokenResDto.getAccess_token());
-        account.renewSocketKey(oauthSocketResDto.getApproval_key());
+        account.renewAccessToken(oauthTokenResDto.getAccessToken());
+        account.renewSocketKey(oauthSocketResDto.getApprovalKey());
 
         KisAccount savedAccount = kisAccountRepository.saveAndFlush(account);
 
