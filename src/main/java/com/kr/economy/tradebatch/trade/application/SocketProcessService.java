@@ -147,7 +147,6 @@ public class SocketProcessService {
             if (lastTradingHistory.isPresent() && lastTradingHistory.get().isCompletedBuyTrading()) {
                 int orderPrice = lastTradingHistory.get().getOrderPrice();
                 if (koreaStockOrderQueryService.getSellSignal(ticker, quotedPrice, orderPrice, tradingTime)) {
-
                     orderCommandService.order(
                             TEST_ID, ticker, OrderDvsnCode.SELL, KisOrderDvsnCode.MARKET_ORDER, quotedPrice);
                 }
@@ -201,6 +200,7 @@ public class SocketProcessService {
             String refuseCode = result[12];
             String tradeResultCode = result[13];
 
+            // TODO [다량 주문] 변경 대상 - 마지막 주문이 아닌 주문 번호로 찾아야 함
             Optional<Order> optLastOrder = orderQueryService.getLastOrder(TEST_ID, ticker);
 
             if (optLastOrder.isEmpty()) {
@@ -214,6 +214,7 @@ public class SocketProcessService {
                 throw new RuntimeException("[주문 내역 조회 실패] 미체결 주문 정보 존재하지 않음 - 마지막 주문 정보 : " + lastOrder);
             }
 
+            // TODO [다량 주문] 변경 대상
             if (tradeResultCode.equals(TRADE_RES_CODE_ORDER_TRANSMISSION)) {
                 CreateTradingHistoryCommand createTradingHistoryCommand = CreateTradingHistoryCommand.builder()
                         .ticker(ticker)
