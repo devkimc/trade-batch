@@ -35,10 +35,7 @@ public class DomesticStockOrderCommandService {
         Order updatedOrder = null;
 
         try {
-            // 1. 주문 정보 등록
-//            Order registeredOrder = orderRepository.save(new Order(orderInCashCommand));
-
-            // 2. 한투 주문 요청
+            // 한투 주문 요청
             OrderInCashResDto orderInCashResDto = domesticStockOrderClient.orderInCash(
                     "application/json; charset=utf-8",
                     orderInCashCommand.getAuthorization(),
@@ -49,10 +46,7 @@ public class DomesticStockOrderCommandService {
                     toOrderInCashReqDto(orderInCashCommand)
             );
 
-//            registeredOrder.updateOrderResult(orderInCashResDto);
-//
-//            // 3. 주문 정보 수정
-//            updatedOrder = orderRepository.save(registeredOrder);
+            log.info("[국내 주식 주문 응답] - {}", orderInCashResDto);
         } catch (DataAccessException dae) {
             log.error("[국내 주식 주문 실패] DB 처리 에러 - {}", dae.toString());
         } catch (RuntimeException re) {

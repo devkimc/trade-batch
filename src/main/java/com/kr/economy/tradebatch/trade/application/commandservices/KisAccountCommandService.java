@@ -1,5 +1,6 @@
 package com.kr.economy.tradebatch.trade.application.commandservices;
 
+import com.kr.economy.tradebatch.trade.application.queryservices.KisAccountQueryService;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.KisAccount;
 import com.kr.economy.tradebatch.trade.domain.repositories.KisAccountRepository;
 import com.kr.economy.tradebatch.trade.infrastructure.rest.KisOauthClient;
@@ -12,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 
 @Slf4j
 @Service
@@ -21,6 +24,7 @@ public class KisAccountCommandService {
 
     private final KisOauthClient kisOauthClient;
     private final KisAccountRepository kisAccountRepository;
+    private final KisAccountQueryService kisAccountQueryService;
 
     @Value("${credential.kis.trade.app-key}")
     private String appKey;
@@ -67,5 +71,24 @@ public class KisAccountCommandService {
                 savedAccount.getSocketKey());
 
         return savedAccount.getAccessToken();
+    }
+
+    /**
+     * 복호화 정보 변경
+     * @param accountId
+     * @param iv
+     * @param key
+     */
+    public void changeDecryptInfo(String accountId, String iv, String key) {
+        if (!StringUtils.hasText(iv) || !StringUtils.hasText(key)) {
+            log.error("[Socket response] 복호화 값 미존재 iv : {}, key : {}", iv, key);
+            return;
+        }
+
+        KisAccount kisAccount = kisAccountQueryService.getKisAccount(accountId);
+        kisAccount.updateSocketDecryptKey(iv, key);
+        kisAccountRepository.save(kisAccount);
+
+//        log.info("[Socket response] 복호화 값 저장 성공 iv : {}, key : {}", kisAccount.getSocketDecryptIv(), kisAccount.getSocketDecryptKey());
     }
 }

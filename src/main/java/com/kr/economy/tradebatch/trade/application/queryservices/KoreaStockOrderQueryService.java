@@ -16,6 +16,8 @@ import java.time.Month;
 import java.util.List;
 import java.util.Optional;
 
+import static com.kr.economy.tradebatch.common.util.DateUtil.getTodayLocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -52,11 +54,6 @@ public class KoreaStockOrderQueryService {
                 return false;
             }
 
-            // 거래 시간 확인
-            if (!isTradeTime(tradingTime)) {
-                return false;
-            }
-
             // 주식 상품 정보 조회
             StockItemInfo stockItemInfo = stockItemInfoQueryService.getStockItemInfo(ticker);
 
@@ -76,6 +73,7 @@ public class KoreaStockOrderQueryService {
 //            }
             List<StockQuotes> top2ByTickerOrderByIdDesc = stockQuotesRepository.findTop2ByTickerOrderByIdDesc(ticker);
 
+            // TODO 제거 해도 될지 검토 필요
             Float top1ByIdDesc = top2ByTickerOrderByIdDesc.get(top2ByTickerOrderByIdDesc.size() - 2).getBidAskBalanceRatio();
             Float top2ByIdDesc = top2ByTickerOrderByIdDesc.get(top2ByTickerOrderByIdDesc.size() - 1).getBidAskBalanceRatio();
             float bidAskBalanceRatioGap = Math.round((top1ByIdDesc - top2ByIdDesc) * 100 / 100.0);
@@ -85,6 +83,11 @@ public class KoreaStockOrderQueryService {
             float reBidAskBalanceRatioGap = Math.round((reTop1ByDesc - reTop2ByDesc) * 100 / 100.0);
 
             if (bidAskBalanceRatioGap <= 0 || reBidAskBalanceRatioGap <= 0) {
+                return false;
+            }
+
+            // 거래 시간 확인
+            if (!isTradeTime()) {
                 return false;
             }
 
@@ -104,31 +107,19 @@ public class KoreaStockOrderQueryService {
      */
     public boolean getSellSignal(String ticker, int quotedPrice, int buyPrice, String tradingTime) {
         StockItemInfo stockItemInfo = stockItemInfoQueryService.getStockItemInfo(ticker);
-        return stockItemInfo.haveToSell(buyPrice, quotedPrice, tradingTime);
+        return stockItemInfo.haveToSell(buyPrice, quotedPrice);
     }
 
-    private boolean isTradeTime(String tradingTime) {
-        LocalDate now = LocalDate.now();
-        int hour = Integer.parseInt(tradingTime.substring(0, 2));
-        int minute = Integer.parseInt(tradingTime.substring(2, 4));
-        int second = Integer.parseInt(tradingTime.substring(4, 6));
+    private boolean isTradeTime() {
 
         // TODO 테스트 필요
-        int year = now.getYear();
-        Month month = now.getMonth();
-        int dayOfMonth = now.getDayOfMonth();
-
-        LocalDateTime tradingLocalDateTime = LocalDateTime.of(year, month, dayOfMonth, hour, minute, second);
-        LocalDateTime tradeStartLocalDateTime = LocalDateTime.of(year, month, dayOfMonth, 9, 1, 0);
-        LocalDateTime tradeEndLocalDateTime = LocalDateTime.of(year, month, dayOfMonth, 15, 25, 0);
-
-        if (tradingLocalDateTime.isAfter(tradeEndLocalDateTime)) {
-            log.info("[매수 신호 조회] 장 마감 전 5분 이내 - 매수 X");
+        if (LocalDateTime.now().isBefore(getTodayLocalDateTime(9, 1 ,0))) {
+            log.info("[매수 신호 조회] 장 시작 후 1분 이내 - 매수 X");
             return false;
         }
 
-        if (tradingLocalDateTime.isBefore(tradeStartLocalDateTime)) {
-            log.info("[매수 신호 조회] 장 시작 후 1분 이내 - 매수 X");
+        if (LocalDateTime.now().isAfter(getTodayLocalDateTime(15, 25, 0))) {
+            log.info("[매수 신호 조회] 장 마감 전 5분 이내 - 매수 X");
             return false;
         }
 

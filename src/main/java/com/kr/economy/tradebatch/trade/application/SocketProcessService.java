@@ -3,10 +3,7 @@ package com.kr.economy.tradebatch.trade.application;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kr.economy.tradebatch.config.SocketResultDto;
-import com.kr.economy.tradebatch.trade.application.commandservices.OrderCommandService;
-import com.kr.economy.tradebatch.trade.application.commandservices.StockQuotesCommandService;
-import com.kr.economy.tradebatch.trade.application.commandservices.TradeReturnCommandService;
-import com.kr.economy.tradebatch.trade.application.commandservices.TradingHistoryCommandService;
+import com.kr.economy.tradebatch.trade.application.commandservices.*;
 import com.kr.economy.tradebatch.trade.application.queryservices.*;
 import com.kr.economy.tradebatch.trade.domain.constants.KisOrderDvsnCode;
 import com.kr.economy.tradebatch.trade.domain.constants.OrderDvsnCode;
@@ -48,6 +45,7 @@ public class SocketProcessService {
     private final OrderQueryService orderQueryService;
     private final OrderRepository orderRepository;
     private final TradeReturnCommandService tradeReturnCommandService;
+    private final KisAccountCommandService kisAccountCommandService;
 
     @Value("${spring.profiles.active}")
     private String activeProfile;
@@ -83,17 +81,9 @@ public class SocketProcessService {
                     }
                     return;
                 }
-                SocketResultDto.OutPut output = body.getOutput();
 
-                if (!StringUtils.hasText(output.getIv()) || !StringUtils.hasText(output.getKey())) {
-                    log.info("[Socket response] 복호화 값 미존재 iv : {}, key : {}", output.getIv(), output.getIv());
-                    return;
-                }
-
-                KisAccount kisAccount = kisAccountQueryService.getKisAccount(TEST_ID);
-                kisAccount.updateSocketDecryptKey(output.getIv(), output.getKey());
-                kisAccountRepository.save(kisAccount);
-//                log.info("[Socket response] 복호화 값 저장 성공 iv : {}, key : {}", kisAccount.getSocketDecryptIv(), kisAccount.getSocketDecryptKey());
+                // 복호화 정보 변경
+                kisAccountCommandService.changeDecryptInfo(TEST_ID, body.getOutput().getIv(), body.getOutput().getKey());
                 return;
             }
 
@@ -110,10 +100,8 @@ public class SocketProcessService {
             }
         } catch (JsonProcessingException jpe) {
             log.error("[Socket response Json 파싱 에러] exception : {}, message: {}", jpe, jpe.getMessage());
-            log.error("[Socket response Json 파싱 에러] message : {}", message);
         } catch (RuntimeException re) {
             log.error("[Socket response Json 파싱 Runtime 에러] exception : {}, message: {}", re, re.getMessage());
-            log.error("[Socket response Json 파싱 Runtime 에러] message : {}", message);
         }
     }
 
@@ -156,17 +144,12 @@ public class SocketProcessService {
                             TEST_ID, ticker, OrderDvsnCode.BUY, KisOrderDvsnCode.MARKET_ORDER, quotedPrice);
                 }
             }
-        }
-        catch (DataAccessException dae) {
+        } catch (DataAccessException dae) {
             log.error("[{} Socket response DB 에러] exception : {}, message: {}", trId, dae, dae.getMessage());
-            log.error("[Socket response DB 에러] message : {}", message);
-        }
-        catch (RuntimeException re) {
+        } catch (RuntimeException re) {
             log.error("[{} Socket response 런타임 에러] exception : {}, message: {}", trId, re, re.getMessage());
-            log.error("[Socket response 런타임 에러] message : {}", message);
         } catch (Exception e) {
             log.error("[{} Socket response 미처리 에러] exception : {}, message: {}", trId, e, e.getMessage());
-            log.error("[Socket response 미처리 에러] message : {}", message);
         }
     }
 
@@ -215,6 +198,7 @@ public class SocketProcessService {
             }
 
             // TODO [다량 주문] 변경 대상
+            // TODO TradingHistoryCommandService 의 별도 서비스로 관리할지 검토 필요
             if (tradeResultCode.equals(TRADE_RES_CODE_ORDER_TRANSMISSION)) {
                 CreateTradingHistoryCommand createTradingHistoryCommand = CreateTradingHistoryCommand.builder()
                         .ticker(ticker)
@@ -257,14 +241,11 @@ public class SocketProcessService {
             }
 //            String tradingResultType = "0".equals(refuseCode) && "2".equals(tradeResultCode) ? "0" : "1";
         } catch (DataAccessException dae) {
-            log.error("[{} Socket response DB 에러] exception : {}, message: {}", trId, dae, dae.getMessage());
-            log.error("[Socket response DB 에러] message : {}", message);
+            log.error("[{} Socket response DB 에러] exception : {}, message: {}", trId, dae, message);
         } catch (RuntimeException re) {
-            log.error("[{} Socket response 런타임 에러] exception : {}, message: {}", trId, re, re.getMessage());
-            log.error("[Socket response 런타임 에러] message : {}", message);
+            log.error("[{} Socket response 런타임 에러] exception : {}, message: {}", trId, re, message);
         } catch (Exception e) {
-            log.error("[{} Socket response 미처리 에러] exception : {}, message: {}", trId, e, e.getMessage());
-            log.error("[Socket response 미처리 에러] message : {}", message);
+            log.error("[{} Socket response 미처리 에러] exception : {}, message: {}", trId, e, message);
         }
     }
 }

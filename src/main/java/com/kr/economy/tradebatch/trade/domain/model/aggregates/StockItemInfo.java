@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 
+import static com.kr.economy.tradebatch.common.util.DateUtil.getTodayLocalDateTime;
+
 @Entity
 @Getter
 @ToString
@@ -59,16 +61,13 @@ public class StockItemInfo {
      * @param quotedPrice
      * @return
      */
-    public boolean haveToSell(int buyPrice, int quotedPrice, String tradingTime) {
-        LocalDateTime now = LocalDateTime.now();
-
+    public boolean haveToSell(int buyPrice, int quotedPrice) {
         // 오후 3시 25분일 경우 모두 매도
-        boolean isClosingTime = now.getHour() == 15 && now.getMinute() >= 25;
-
-        if (isClosingTime) {
-            log.info("[매도 신호] 장 마감 시간 임박 : {}", now);
-            return false;
+        if (LocalDateTime.now().isAfter(getTodayLocalDateTime(15, 25, 0))) {
+            log.info("[매도 신호] 장 마감 5분 전 매도 : {}", LocalDateTime.now());
+            return true;
         }
+
 
         return this.haveToStopLoss(buyPrice, quotedPrice) || this.haveToTakeProfit(buyPrice, quotedPrice);
 
