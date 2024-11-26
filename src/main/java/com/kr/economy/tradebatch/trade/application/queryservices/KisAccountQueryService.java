@@ -1,7 +1,7 @@
 package com.kr.economy.tradebatch.trade.application.queryservices;
 
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.KisAccount;
-import com.kr.economy.tradebatch.trade.domain.repositories.KisAccountRepository;
+import com.kr.economy.tradebatch.trade.infrastructure.repositories.KisAccountRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

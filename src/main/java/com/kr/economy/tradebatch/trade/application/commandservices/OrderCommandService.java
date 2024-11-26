@@ -6,7 +6,7 @@ import com.kr.economy.tradebatch.trade.domain.constants.KisOrderDvsnCode;
 import com.kr.economy.tradebatch.trade.domain.constants.OrderDvsnCode;
 import com.kr.economy.tradebatch.trade.domain.constants.OrderStatus;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.Order;
-import com.kr.economy.tradebatch.trade.domain.repositories.OrderRepository;
+import com.kr.economy.tradebatch.trade.infrastructure.repositories.OrderRepository;
 import com.kr.economy.tradebatch.trade.infrastructure.rest.DomesticStockOrderClient;
 import com.kr.economy.tradebatch.trade.infrastructure.rest.dto.OrderInCashReqDto;
 import com.kr.economy.tradebatch.trade.infrastructure.rest.dto.OrderInCashResDto;

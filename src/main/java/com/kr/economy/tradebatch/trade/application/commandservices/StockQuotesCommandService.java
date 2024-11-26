@@ -1,7 +1,7 @@
 package com.kr.economy.tradebatch.trade.application.commandservices;
 
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.StockQuotes;
-import com.kr.economy.tradebatch.trade.domain.repositories.StockQuotesRepository;
+import com.kr.economy.tradebatch.trade.infrastructure.repositories.StockQuotesRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

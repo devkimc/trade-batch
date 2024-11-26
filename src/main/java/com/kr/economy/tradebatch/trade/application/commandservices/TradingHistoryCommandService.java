@@ -5,7 +5,7 @@ import com.kr.economy.tradebatch.trade.domain.constants.KisOrderDvsnCode;
 import com.kr.economy.tradebatch.trade.domain.constants.OrderDvsnCode;
 import com.kr.economy.tradebatch.trade.domain.constants.TradingResultType;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.TradingHistory;
-import com.kr.economy.tradebatch.trade.domain.repositories.TradingHistoryRepository;
+import com.kr.economy.tradebatch.trade.infrastructure.repositories.TradingHistoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

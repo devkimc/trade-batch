@@ -1,4 +1,4 @@
-package com.kr.economy.tradebatch.trade.domain.repositories;
+package com.kr.economy.tradebatch.trade.infrastructure.repositories;
 
 
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.StockQuotes;
@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
-public interface StockQuotesRepository extends JpaRepository<StockQuotes, Long> {
+public interface StockQuotesRepository extends JpaRepository<StockQuotes, Long>, StockQuotesRepositoryCustom {
 
     /**
      * 마지막 체결 이력 조회

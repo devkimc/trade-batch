@@ -4,15 +4,12 @@ import com.kr.economy.tradebatch.common.util.DateUtil;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.StockQuotes;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.StockItemInfo;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.TradeReturn;
-import com.kr.economy.tradebatch.trade.domain.repositories.StockQuotesRepository;
-import com.kr.economy.tradebatch.trade.infrastructure.repositories.StockQuotesRepositoryCustom;
+import com.kr.economy.tradebatch.trade.infrastructure.repositories.StockQuotesRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Month;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,7 +20,6 @@ import static com.kr.economy.tradebatch.common.util.DateUtil.getTodayLocalDateTi
 @Slf4j
 public class KoreaStockOrderQueryService {
 
-    private final StockQuotesRepositoryCustom stockQuotesRepositoryCustom;
     private final StockItemInfoQueryService stockItemInfoQueryService;
     private final StockQuotesRepository stockQuotesRepository;
     private final TradeReturnQueryService tradeReturnQueryService;
@@ -37,7 +33,7 @@ public class KoreaStockOrderQueryService {
 
         try {
             // 최근 주가 변동 내역 조회
-            List<StockQuotes> recentStockQuotes = stockQuotesRepositoryCustom.getRecentTrendHistory(ticker);
+            List<StockQuotes> recentStockQuotes = stockQuotesRepository.getRecentTrendHistory(ticker);
 
             if (recentStockQuotes.size() < 3) {
                 log.debug("데이터 부족");

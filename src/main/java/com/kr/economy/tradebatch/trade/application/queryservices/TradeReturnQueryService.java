@@ -2,7 +2,7 @@ package com.kr.economy.tradebatch.trade.application.queryservices;
 
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.TradeReturn;
 import com.kr.economy.tradebatch.trade.domain.model.valueObject.TradeReturnId;
-import com.kr.economy.tradebatch.trade.domain.repositories.TradeReturnRepository;
+import com.kr.economy.tradebatch.trade.infrastructure.repositories.TradeReturnRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

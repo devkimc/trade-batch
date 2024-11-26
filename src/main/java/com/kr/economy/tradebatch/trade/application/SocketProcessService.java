@@ -12,8 +12,8 @@ import com.kr.economy.tradebatch.trade.domain.model.aggregates.KisAccount;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.Order;
 import com.kr.economy.tradebatch.trade.domain.model.commands.CalculateTradeReturnCommand;
 import com.kr.economy.tradebatch.trade.domain.model.commands.CreateTradingHistoryCommand;
-import com.kr.economy.tradebatch.trade.domain.repositories.KisAccountRepository;
-import com.kr.economy.tradebatch.trade.domain.repositories.OrderRepository;
+import com.kr.economy.tradebatch.trade.infrastructure.repositories.KisAccountRepository;
+import com.kr.economy.tradebatch.trade.infrastructure.repositories.OrderRepository;
 import com.kr.economy.tradebatch.util.AES256;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 
 import java.util.Optional;
 

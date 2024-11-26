@@ -3,7 +3,7 @@ package com.kr.economy.tradebatch.trade.application.commandservices;
 import com.kr.economy.tradebatch.common.util.KisUtil;
 import com.kr.economy.tradebatch.trade.domain.model.commands.OrderInCashCommand;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.Order;
-import com.kr.economy.tradebatch.trade.domain.repositories.OrderRepository;
+import com.kr.economy.tradebatch.trade.infrastructure.repositories.OrderRepository;
 import com.kr.economy.tradebatch.trade.infrastructure.rest.DomesticStockOrderClient;
 import com.kr.economy.tradebatch.trade.infrastructure.rest.dto.OrderInCashReqDto;
 import com.kr.economy.tradebatch.trade.infrastructure.rest.dto.OrderInCashResDto;

@@ -8,7 +8,7 @@ import com.kr.economy.tradebatch.trade.application.queryservices.KoreaStockOrder
 import com.kr.economy.tradebatch.trade.application.queryservices.StockItemInfoQueryService;
 import com.kr.economy.tradebatch.trade.application.queryservices.TradingHistoryQueryService;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.*;
-import com.kr.economy.tradebatch.trade.domain.repositories.StockQuotesSimRepository;
+import com.kr.economy.tradebatch.trade.infrastructure.repositories.StockQuotesSimRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
