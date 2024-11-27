@@ -23,15 +23,15 @@ public class OrderQueryService {
      * @param ticker
      * @return
      */
-    public boolean existsNotTradingOrder(String accountId, String ticker) {
-        Optional<Order> lastOrder = orderRepository.getLastOrder(accountId, ticker);
-
-        if (lastOrder.isPresent() && lastOrder.get().isNotTrading()) {
-            return true;
-        } else {
-            return false;
-        }
-    }
+//    public boolean existsNotTradingOrder(String accountId, String ticker) {
+//        Optional<Order> lastOrder = orderRepository.getLastOrder(accountId, ticker);
+//
+//        if (lastOrder.isPresent() && lastOrder.get().isNotTrading()) {
+//            return true;
+//        } else {
+//            return false;
+//        }
+//    }
 
     public Optional<Order> getLastOrder(String accountId, String ticker) {
         return orderRepository.getLastOrder(accountId, ticker);

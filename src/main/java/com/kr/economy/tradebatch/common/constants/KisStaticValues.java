@@ -71,5 +71,5 @@ public class KisStaticValues {
     public static final String TRADE_RES_CODE_ORDER_TRANSMISSION = "1";
 
     /* 실시간 체결 통보 응답 - 체결 완료 */
-    public static final String TRADE_RES_CODE_TRADE_COMPLETION = "2";
+    public static final String TRADE_RES_CODE_COMPLETION = "2";
 }

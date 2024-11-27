@@ -28,6 +28,7 @@ public class TradeReturnCommandService {
                 .tradeDate(DateUtil.toNonHyphenDay(LocalDateTime.now()))
                 .build();
 
+        // 종목별 매수, 매도 금액 조회
         TradeReturn tradeReturn = tradeReturnRepository.findById(tradeReturnId)
                 .orElseGet(
                         () -> TradeReturn.builder()
@@ -37,6 +38,7 @@ public class TradeReturnCommandService {
                                 .build()
                 );
 
+        // 매수, 매도 금액 증가
         tradeReturn.addTradePrice(
                 OrderDvsnCode.find(calculateTradeReturnCommand.getOrderDvsnCode()),
                 calculateTradeReturnCommand.getTradingPrice());

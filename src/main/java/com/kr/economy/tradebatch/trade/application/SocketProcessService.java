@@ -12,6 +12,7 @@ import com.kr.economy.tradebatch.trade.domain.model.aggregates.KisAccount;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.Order;
 import com.kr.economy.tradebatch.trade.domain.model.commands.CalculateTradeReturnCommand;
 import com.kr.economy.tradebatch.trade.domain.model.commands.CreateTradingHistoryCommand;
+import com.kr.economy.tradebatch.trade.domain.model.commands.CreateTradingHistoryProcessCommand;
 import com.kr.economy.tradebatch.trade.infrastructure.repositories.KisAccountRepository;
 import com.kr.economy.tradebatch.trade.infrastructure.repositories.OrderRepository;
 import com.kr.economy.tradebatch.util.AES256;
@@ -34,17 +35,13 @@ import static com.kr.economy.tradebatch.common.constants.KisStaticValues.*;
 public class SocketProcessService {
 
     private final StockQuotesCommandService stockQuotesCommandService;
-    private final TradingHistoryCommandService tradingHistoryCommandService;
-    private final TradingHistoryQueryService tradingHistoryQueryService;
     private final KisAccountQueryService kisAccountQueryService;
-    private final KisAccountRepository kisAccountRepository;
     private final ObjectMapper objectMapper;
     private final OrderCommandService orderCommandService;
     private final OrderQueryService orderQueryService;
-    private final OrderRepository orderRepository;
-    private final TradeReturnCommandService tradeReturnCommandService;
     private final KisAccountCommandService kisAccountCommandService;
     private final StockQuotesQueryService stockQuotesQueryService;
+    private final TradingHistoryCommandService tradingHistoryCommandService;
 
     @Value("${spring.profiles.active}")
     private String activeProfile;
@@ -123,38 +120,30 @@ public class SocketProcessService {
             // 실시간 현재가 저장
             stockQuotesCommandService.createStockQuote(ticker, quotedPrice, bidAskBalanceRatio, tradingTime);
 
-            // TODO 동일한 쿼리를 두번 호출하고 있음. 리팩토링 필요
-            // 미체결 주문 내역이 존재할 경우 주문하지 않음
-            if (orderQueryService.existsNotTradingOrder(TEST_ID, ticker)) {
+            Optional<Order> optLastOrder = orderQueryService.getLastOrder(TEST_ID, ticker);
+
+            // 미체결 주문이 존재할 경우 주문하지 않음
+            if (optLastOrder.isPresent() && optLastOrder.get().isNotTrading()) {
                 return;
             }
 
-            // 당일 마지막 체결 내역 조회
-//            Optional<TradingHistory> lastTradingHistory = tradingHistoryQueryService.getLastHistoryOfToday(ticker);
-            Optional<Order> lastTradingHistory = orderQueryService.getLastOrder(TEST_ID, ticker);
-
             // 마지막 체결 내역이 매수일 경우에만 매도
-            if (lastTradingHistory.isPresent() && lastTradingHistory.get().isCompletedBuyTrading()) {
-                if (stockQuotesQueryService.getSellSignal(ticker, quotedPrice, lastTradingHistory.get().getOrderPrice(), tradingTime)) {
-                    orderCommandService.order(
-                            TEST_ID, ticker, OrderDvsnCode.SELL, KisOrderDvsnCode.MARKET_ORDER, quotedPrice);
+            if (optLastOrder.isPresent() && optLastOrder.get().isCompletedBuyTrading()) {
+                if (stockQuotesQueryService.getSellSignal(ticker, quotedPrice, optLastOrder.get().getOrderPrice(), tradingTime)) {
+                    orderCommandService.order(TEST_ID, ticker, OrderDvsnCode.SELL, KisOrderDvsnCode.MARKET_ORDER, quotedPrice);
                 }
             } else {
                 if (stockQuotesQueryService.getBuySignal(ticker, quotedPrice, tradingTime, TEST_ID, message)) {
-                    orderCommandService.order(
-                            TEST_ID, ticker, OrderDvsnCode.BUY, KisOrderDvsnCode.MARKET_ORDER, quotedPrice);
+                    orderCommandService.order(TEST_ID, ticker, OrderDvsnCode.BUY, KisOrderDvsnCode.MARKET_ORDER, quotedPrice);
                 }
             }
         } catch (DataAccessException dae) {
-            log.error("[{} Socket response DB 에러] exception : {}, message: {}", trId, dae, dae.getMessage());
+            log.error("[{} 실시간 체결가 수신 DB 에러] exception : {}, message: {}", trId, dae, dae.getMessage());
         } catch (RuntimeException re) {
-            log.error("[{} Socket response 런타임 에러] exception : {}, message: {}", trId, re, re.getMessage());
-        } catch (Exception e) {
-            log.error("[{} Socket response 미처리 에러] exception : {}, message: {}", trId, e, e.getMessage());
+            log.error("[{} 실시간 체결가 수신 런타임 에러] exception : {}, message: {}", trId, re, re.getMessage());
         }
     }
 
-    // TODO 체결 내역 쿼리 서비스로 이동하는 것 검토
     /**
      * 실시간 체결 통보 응답 처리
      * @param message
@@ -175,79 +164,36 @@ public class SocketProcessService {
             log.info("[실시간 체결 통보 응답] : {}", tradeResult);
             String kisId = result[0];
             String kisOrderId = result[2];
-            String kisOrOrderID = result[3];
+            String kisOrOrderId = result[3];
             String orderDvsnCode = result[4];
             String kisOrderDvsnCode = result[6];
             String ticker = result[8];
             String tradingQty = result[9];
             String tradingPrice = result[10];
             String tradingTime = result[11];
-            String refuseCode = result[12];
             String tradeResultCode = result[13];
 
-            // TODO [다량 주문] 변경 대상 - 마지막 주문이 아닌 주문 번호로 찾아야 함
-            Optional<Order> optLastOrder = orderQueryService.getLastOrder(TEST_ID, ticker);
+            CreateTradingHistoryProcessCommand createTradingHistoryProcessCommand = CreateTradingHistoryProcessCommand.builder()
+                    .ticker(ticker)
+                    .orderDvsnCode(orderDvsnCode)
+                    .tradingPrice(tradingPrice)
+                    .tradingQty(tradingQty)
+                    .kisOrderDvsnCode(kisOrderDvsnCode)
+                    .tradingTime(tradingTime)
+                    .kisId(kisId)
+                    .kisOrderId(kisOrderId)
+                    .kisOrOrderId(kisOrOrderId)
+                    .tradeResultCode(tradeResultCode)
+                    .tradeResult(tradeResult)
+                    .accountId(kisAccount.getAccountId())
+                    .build();
 
-            if (optLastOrder.isEmpty()) {
-                log.info("[주문 내역 조회 실패] accountId: {}, ticker: {}", TEST_ID, ticker);
-                throw new RuntimeException("[주문 내역 조회 실패] 주문 정보 존재하지 않음 : " + tradeResult);
-            }
-
-            Order lastOrder = optLastOrder.get();
-
-            if (lastOrder.isTrading()) {
-                throw new RuntimeException("[주문 내역 조회 실패] 미체결 주문 정보 존재하지 않음 - 마지막 주문 정보 : " + lastOrder);
-            }
-
-            // TODO [다량 주문] 변경 대상
-            // TODO TradingHistoryCommandService 의 별도 서비스로 관리할지 검토 필요
-            if (tradeResultCode.equals(TRADE_RES_CODE_ORDER_TRANSMISSION)) {
-                CreateTradingHistoryCommand createTradingHistoryCommand = CreateTradingHistoryCommand.builder()
-                        .ticker(ticker)
-                        .orderDvsnCode(orderDvsnCode)
-                        .tradingPrice(Integer.parseInt(tradingPrice))
-                        .tradingQty(Integer.parseInt(tradingQty))
-//                    .tradingResultType(tradingResultType)
-                        .kisOrderDvsnCode(kisOrderDvsnCode)
-                        .kisId(kisId)
-                        .tradingTime(tradingTime)
-                        .kisOrderId(kisOrderId)
-                        .kisOrOrderId(kisOrOrderID)
-                        .build();
-                tradingHistoryCommandService.createTradingHistory(createTradingHistoryCommand);
-
-                lastOrder.updateOrderStatus(OrderStatus.ORDER_SUCCESS);
-                Order updatedOrder = orderRepository.save(lastOrder);
-
-            } else if (tradeResultCode.equals(TRADE_RES_CODE_TRADE_COMPLETION)) {
-
-                if (ObjectUtils.isEmpty(tradingHistoryQueryService.getTradingHistoryList(ticker))) {
-                    throw new RuntimeException("[실시간 체결 통보] 주문 접수 내역이 존재하지 않습니다.");
-                }
-
-                lastOrder.updateOrderPrice(Integer.parseInt(tradingPrice));
-                lastOrder.updateOrderStatus(OrderStatus.TRADE_SUCCESS);
-                Order updatedOrder = orderRepository.save(lastOrder);
-
-                CalculateTradeReturnCommand calculateTradeReturnCommand = CalculateTradeReturnCommand.builder()
-                        .accountId(kisAccount.getAccountId())
-                        .ticker(ticker)
-                        .orderDvsnCode(orderDvsnCode)
-                        .tradingPrice(Integer.parseInt(tradingPrice))
-                        .tradingQty(Integer.parseInt(tradingQty))
-                        .build();
-
-                tradeReturnCommandService.calculateTradeReturn(calculateTradeReturnCommand);
-
-//                log.info("[실시간 체결 통보] 체결 완료 된 주문 DB 저장 완료 order: {}", updatedOrder);
-            }
-//            String tradingResultType = "0".equals(refuseCode) && "2".equals(tradeResultCode) ? "0" : "1";
+            // 체결 내역 저장
+            tradingHistoryCommandService.createTradingHistoryProcess(createTradingHistoryProcessCommand);
         } catch (DataAccessException dae) {
-            log.error("[{} Socket response DB 에러] exception : {}, message: {}", trId, dae, message);
+            log.error("[{} 실시간 체결통보 수신 DB 에러] exception : {}, message: {}", trId, dae, message);
         } catch (RuntimeException re) {
-            log.error("[{} Socket response 런타임 에러] exception : {}, message: {}", trId, re, message);
-        } catch (Exception e) {
-            log.error("[{} Socket response 미처리 에러] exception : {}, message: {}", trId, e, message);
+            log.error("[{} 실시간 체결통보 수신 런타임 에러] exception : {}, message: {}", trId, re, message);
         }
     }
 }
