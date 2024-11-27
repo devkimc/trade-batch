@@ -36,4 +36,8 @@ public class OrderQueryService {
     public Optional<Order> getLastOrder(String accountId, String ticker) {
         return orderRepository.getLastOrder(accountId, ticker);
     }
+
+    public Optional<Order> getOrderByOrderNo(String orderNo) {
+        return orderRepository.findByKisOrderNo(orderNo);
+    }
 }

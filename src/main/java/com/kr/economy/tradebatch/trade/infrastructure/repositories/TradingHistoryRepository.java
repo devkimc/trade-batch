@@ -8,4 +8,6 @@ import java.util.List;
 public interface TradingHistoryRepository extends JpaRepository<TradingHistory, Long>, TradingHistoryRepositoryCustom {
 
     List<TradingHistory> findByTicker(String ticker);
+
+    List<TradingHistory> findByTickerAndKisOrderId(String ticker, String kisOrderId);
 }

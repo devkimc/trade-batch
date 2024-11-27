@@ -8,7 +8,6 @@ import com.kr.economy.tradebatch.trade.domain.model.commands.CalculateTradeRetur
 import com.kr.economy.tradebatch.trade.domain.model.commands.CreateTradingHistoryCommand;
 import com.kr.economy.tradebatch.trade.domain.constants.KisOrderDvsnCode;
 import com.kr.economy.tradebatch.trade.domain.constants.OrderDvsnCode;
-import com.kr.economy.tradebatch.trade.domain.constants.TradingResultType;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.TradingHistory;
 import com.kr.economy.tradebatch.trade.domain.model.commands.CreateTradingHistoryProcessCommand;
 import com.kr.economy.tradebatch.trade.infrastructure.repositories.OrderRepository;
@@ -20,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 
+import java.util.List;
 import java.util.Optional;
 
 import static com.kr.economy.tradebatch.common.constants.KisStaticValues.*;
@@ -30,11 +30,11 @@ import static com.kr.economy.tradebatch.common.constants.KisStaticValues.*;
 @RequiredArgsConstructor
 public class TradingHistoryCommandService {
 
-    private final TradingHistoryRepository tradingHistoryRepository;
     private final TradingHistoryQueryService tradingHistoryQueryService;
-    private final OrderRepository orderRepository;
     private final TradeReturnCommandService tradeReturnCommandService;
     private final OrderQueryService orderQueryService;
+    private final TradingHistoryRepository tradingHistoryRepository;
+    private final OrderRepository orderRepository;
 
     // TODO 메서드 제거
     public void createTradingHistory(CreateTradingHistoryCommand createTradingHistoryCommand) {
@@ -44,7 +44,7 @@ public class TradingHistoryCommandService {
                 .orderDvsnCode(OrderDvsnCode.find(createTradingHistoryCommand.getOrderDvsnCode()))
                 .tradingPrice(createTradingHistoryCommand.getTradingPrice())
                 .tradingQty(createTradingHistoryCommand.getTradingQty())
-                .tradingResultType(TradingResultType.find(createTradingHistoryCommand.getTradingResultType()))
+                .tradeResultCode(createTradingHistoryCommand.getTradeResultCode())
                 .kisOrderDvsnCode(KisOrderDvsnCode.find(createTradingHistoryCommand.getKisOrderDvsnCode()))
                 .tradingTime(createTradingHistoryCommand.getTradingTime())
                 .kisId(createTradingHistoryCommand.getKisId())
@@ -58,8 +58,8 @@ public class TradingHistoryCommandService {
     public void createTradingHistoryProcess(CreateTradingHistoryProcessCommand command) {
 
         try {
-            // TODO [다량 주문] 변경 대상 - 마지막 주문이 아닌 주문 번호로 찾아야 함
-            Optional<Order> optLastOrder = orderQueryService.getLastOrder(TEST_ID, command.getTicker());
+            // 주문 내역 조회
+            Optional<Order> optLastOrder = orderQueryService.getOrderByOrderNo(command.getKisOrderId());
 
             if (optLastOrder.isEmpty()) {
                 log.info("[주문 내역 조회 실패] accountId: {}, ticker: {}", TEST_ID, command.getTicker());
@@ -72,9 +72,7 @@ public class TradingHistoryCommandService {
                 throw new RuntimeException("[주문 내역 조회 실패] 미체결 주문 정보 존재하지 않음 - 마지막 주문 정보 : " + lastOrder);
             }
 
-            // TODO [다량 주문] 변경 대상
-            // TODO TradingHistoryCommandService 의 별도 서비스로 관리할지 검토 필요
-            if (TRADE_RES_CODE_ORDER_TRANSMISSION.equals(command.getTradeResultCode())) {
+            if (TRADE_RES_CODE_ORDER_TRANSMISSION.equals(command.getTradeResultCode())) {   // 주문접수 응답일 경우
                 CreateTradingHistoryCommand createTradingHistoryCommand = CreateTradingHistoryCommand.builder()
                         .ticker(command.getTicker())
                         .orderDvsnCode(command.getOrderDvsnCode())
@@ -85,21 +83,63 @@ public class TradingHistoryCommandService {
                         .tradingTime(command.getTradingTime())
                         .kisOrderId(command.getKisOrderId())
                         .kisOrOrderId(command.getKisOrOrderId())
+                        .tradeResultCode(command.getTradeResultCode())
                         .build();
+
+                // 주문접수 상태의 체결 내역 생성
                 this.createTradingHistory(createTradingHistoryCommand);
 
-                lastOrder.updateOrderStatus(OrderStatus.ORDER_SUCCESS);
-                orderRepository.save(lastOrder);
-
-            } else if (TRADE_RES_CODE_COMPLETION.equals(command.getTradeResultCode())) {
+            } else if (TRADE_RES_CODE_COMPLETION.equals(command.getTradeResultCode())) {    // 체결 응답일 경우
 
                 if (ObjectUtils.isEmpty(tradingHistoryQueryService.getTradingHistoryList(command.getTicker()))) {
                     throw new RuntimeException("[실시간 체결 통보] 주문 접수 내역이 존재하지 않습니다.");
                 }
 
-                lastOrder.updateOrderPrice(Integer.parseInt(command.getTradingPrice()));
+                // 주문번호와 일치하는 체결 내역을 모두 조회
+                List<TradingHistory> tradingHistoryList = tradingHistoryQueryService.getTradingHistoryList(command.getTicker(), command.getKisOrderId());
+                log.info("[체결 내역 조회] - 주문번호: {}, 체결 건수: {}건", command.getKisOrderId(), tradingHistoryList.size());
+
+                // 주문 접수 상태이고, 체결 수량이 일치하는 체결 내역의 상태를 변경한다.
+                TradingHistory tradingHistory = tradingHistoryList.stream()
+                        .filter(history ->
+                                TRADE_RES_CODE_ORDER_TRANSMISSION.equals(history.getTradeResultCode()) &&
+                                        Integer.parseInt(command.getTradingQty()) == history.getTradingQty()
+                        )
+                        .findFirst()
+                        .orElseThrow(
+                                () -> new RuntimeException("[체결 내역 조회 에러] - 주문 접수 상태의 체결 내역이 존재하지 않습니다. ticker: " + command.getTicker()
+                                        + ", orderId: " + command.getKisOrderId() + ", tradingQty: " + command.getTradingQty())
+                        );
+
+                // 체결 상태 변경 - 체결 완료 
+                tradingHistory.changeTradePrice(Integer.parseInt(command.getTradingPrice()));
+                tradingHistory.changeTradeResultCode(TRADE_RES_CODE_COMPLETION);
+                TradingHistory completedTradeHistory = tradingHistoryRepository.save(tradingHistory);
+
+                log.info("[체결 완료] - 주문번호: {}, 종목: {}, 가격: {}, 수량: {}"
+                        , completedTradeHistory.getKisOrderId(), completedTradeHistory.getTicker()
+                        , completedTradeHistory.getTradingPrice(), completedTradeHistory.getTradingQty());
+
+                // 체결수량의 합
+                int tradingQtySum = tradingHistoryList.stream()
+                        .filter(TradingHistory::isTradeCompleted)
+                        .mapToInt(TradingHistory::getTradingQty)
+                        .sum();
+                log.info("[주문, 체결 수량 비교] - 주문번호: {}, 주문수량: {}, 체결수량 합: {}", lastOrder.getKisOrderNo(), lastOrder.getOrderQty(), tradingQtySum);
+
+                // 주문수량과 체결수량의 합을 비교
+                if (lastOrder.getOrderQty() != tradingQtySum) {
+                    log.info("[주문, 체결 수량 비교] - 체결되지 않은 주문이 존재합니다. 주문번호: {}, 주문수량: {}, 체결수량 합: {}", lastOrder.getKisOrderNo(), lastOrder.getOrderQty(), tradingQtySum);
+                    return;
+                }
+
+                // 주문 상태 변경 - 거래 성공
                 lastOrder.updateOrderStatus(OrderStatus.TRADE_SUCCESS);
-                orderRepository.save(lastOrder);
+                Order tradedOrder = orderRepository.save(lastOrder);
+
+                log.info("[거래 완료] - 주문번호: {}, 종목: {}, 가격: {}, 수량: {}"
+                        , tradedOrder.getKisOrderNo(), tradedOrder.getTicker()
+                        , tradedOrder.getOrderPrice(), tradedOrder.getOrderQty());
 
                 CalculateTradeReturnCommand calculateTradeReturnCommand = CalculateTradeReturnCommand.builder()
                         .accountId(command.getAccountId())
@@ -109,13 +149,13 @@ public class TradingHistoryCommandService {
                         .tradingQty(Integer.parseInt(command.getTradingQty()))
                         .build();
 
+                // 수익 계산
                 tradeReturnCommandService.calculateTradeReturn(calculateTradeReturnCommand);
-//                log.info("[실시간 체결 통보] 체결 완료 된 주문 DB 저장 완료 order: {}", updatedOrder);
             }
         } catch (DataAccessException dae) {
-            log.error("[체결 내역 저장 DB 에러] exception : {}, ticker: {}", dae, command.getTicker());
+            log.error("[체결 내역 저장 DB 에러] exception : {}, ticker: {}, orderId: {}", dae, command.getTicker(), command.getKisOrderId());
         } catch (RuntimeException re) {
-            log.error("[체결 내역 저장 런타임 에러] exception : {}, ticker: {}", re, command.getTicker());
+            log.error("[체결 내역 저장 런타임 에러] exception : {}, ticker: {}, orderId: {}", re, command.getTicker(), command.getKisOrderId());
         }
     }
 

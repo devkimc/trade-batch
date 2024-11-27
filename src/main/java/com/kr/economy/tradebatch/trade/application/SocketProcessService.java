@@ -7,14 +7,9 @@ import com.kr.economy.tradebatch.trade.application.commandservices.*;
 import com.kr.economy.tradebatch.trade.application.queryservices.*;
 import com.kr.economy.tradebatch.trade.domain.constants.KisOrderDvsnCode;
 import com.kr.economy.tradebatch.trade.domain.constants.OrderDvsnCode;
-import com.kr.economy.tradebatch.trade.domain.constants.OrderStatus;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.KisAccount;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.Order;
-import com.kr.economy.tradebatch.trade.domain.model.commands.CalculateTradeReturnCommand;
-import com.kr.economy.tradebatch.trade.domain.model.commands.CreateTradingHistoryCommand;
 import com.kr.economy.tradebatch.trade.domain.model.commands.CreateTradingHistoryProcessCommand;
-import com.kr.economy.tradebatch.trade.infrastructure.repositories.KisAccountRepository;
-import com.kr.economy.tradebatch.trade.infrastructure.repositories.OrderRepository;
 import com.kr.economy.tradebatch.util.AES256;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ObjectUtils;
 
 import java.util.Optional;
 
@@ -152,6 +146,7 @@ public class SocketProcessService {
     private void tradeResultNoticeProcess(String trId, String message, String[] resultBody) {
 
         try {
+            // 계정 정보 조회
             KisAccount kisAccount = kisAccountQueryService.getKisAccount(TEST_ID);
             String tradeResult = new AES256().decrypt(resultBody[3], kisAccount.getSocketDecryptKey(), kisAccount.getSocketDecryptIv());
 

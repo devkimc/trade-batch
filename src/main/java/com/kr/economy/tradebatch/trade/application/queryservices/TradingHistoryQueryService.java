@@ -32,4 +32,8 @@ public class TradingHistoryQueryService {
     public List<TradingHistory> getTradingHistoryList(String ticker) {
         return tradingHistoryRepository.findByTicker(ticker);
     }
+
+    public List<TradingHistory> getTradingHistoryList(String ticker, String kisOrderId) {
+        return tradingHistoryRepository.findByTickerAndKisOrderId(ticker, kisOrderId);
+    }
 }

@@ -11,6 +11,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
+import static com.kr.economy.tradebatch.common.constants.KisStaticValues.TRADE_RES_CODE_COMPLETION;
+
 @Entity
 @Getter
 @Builder
@@ -39,6 +41,9 @@ public class TradingHistory {
 
     // 거부여부
     private TradingResultType tradingResultType;
+
+    @Column
+    private String tradeResultCode;
 
     // 주문 종류
     @Column(nullable = false)
@@ -71,5 +76,17 @@ public class TradingHistory {
      */
     public boolean isBuyTrade() {
         return OrderDvsnCode.BUY.equals(orderDvsnCode);
+    }
+
+    public boolean isTradeCompleted() {
+        return TRADE_RES_CODE_COMPLETION.equals(this.tradeResultCode);
+    }
+
+    public void changeTradeResultCode(String tradeResultCode) {
+        this.tradeResultCode = tradeResultCode;
+    }
+
+    public void changeTradePrice(int tradingPrice) {
+        this.tradingPrice = tradingPrice;
     }
 }

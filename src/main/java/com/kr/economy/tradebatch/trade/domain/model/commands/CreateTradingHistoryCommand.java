@@ -19,4 +19,5 @@ public class CreateTradingHistoryCommand {
     private String kisId;                   // 한투 ID
     private String kisOrderId;                  // 한투 주문 번호
     private String kisOrOrderId;                  // 한투 원주문 번호
+    private String tradeResultCode;
 }
