@@ -36,7 +36,6 @@ public class SocketProcessService {
     private final StockQuotesCommandService stockQuotesCommandService;
     private final TradingHistoryCommandService tradingHistoryCommandService;
     private final TradingHistoryQueryService tradingHistoryQueryService;
-    private final KoreaStockOrderQueryService koreaStockOrderQueryService;
     private final KisAccountQueryService kisAccountQueryService;
     private final KisAccountRepository kisAccountRepository;
     private final ObjectMapper objectMapper;
@@ -45,10 +44,12 @@ public class SocketProcessService {
     private final OrderRepository orderRepository;
     private final TradeReturnCommandService tradeReturnCommandService;
     private final KisAccountCommandService kisAccountCommandService;
+    private final StockQuotesQueryService stockQuotesQueryService;
 
     @Value("${spring.profiles.active}")
     private String activeProfile;
 
+    // TODO 최종적으로 WebSocketClientEndPoint 로 이동하는 것으로 변경 검토
     public void processMessage(String message) {
 
         try {
@@ -104,6 +105,7 @@ public class SocketProcessService {
         }
     }
 
+    // TODO 현재가 쿼리 서비스로 이동하는 것 검토
     private void processRealTimeSharePrice(String trId, String message, String[] resultBody) {
         
         String[] result = resultBody[3].split("\\^");
@@ -121,6 +123,7 @@ public class SocketProcessService {
             // 실시간 현재가 저장
             stockQuotesCommandService.createStockQuote(ticker, quotedPrice, bidAskBalanceRatio, tradingTime);
 
+            // TODO 동일한 쿼리를 두번 호출하고 있음. 리팩토링 필요
             // 미체결 주문 내역이 존재할 경우 주문하지 않음
             if (orderQueryService.existsNotTradingOrder(TEST_ID, ticker)) {
                 return;
@@ -132,13 +135,12 @@ public class SocketProcessService {
 
             // 마지막 체결 내역이 매수일 경우에만 매도
             if (lastTradingHistory.isPresent() && lastTradingHistory.get().isCompletedBuyTrading()) {
-                int orderPrice = lastTradingHistory.get().getOrderPrice();
-                if (koreaStockOrderQueryService.getSellSignal(ticker, quotedPrice, orderPrice, tradingTime)) {
+                if (stockQuotesQueryService.getSellSignal(ticker, quotedPrice, lastTradingHistory.get().getOrderPrice(), tradingTime)) {
                     orderCommandService.order(
                             TEST_ID, ticker, OrderDvsnCode.SELL, KisOrderDvsnCode.MARKET_ORDER, quotedPrice);
                 }
             } else {
-                if (koreaStockOrderQueryService.getBuySignal(ticker, quotedPrice, tradingTime, TEST_ID, message)) {
+                if (stockQuotesQueryService.getBuySignal(ticker, quotedPrice, tradingTime, TEST_ID, message)) {
                     orderCommandService.order(
                             TEST_ID, ticker, OrderDvsnCode.BUY, KisOrderDvsnCode.MARKET_ORDER, quotedPrice);
                 }
@@ -152,6 +154,7 @@ public class SocketProcessService {
         }
     }
 
+    // TODO 체결 내역 쿼리 서비스로 이동하는 것 검토
     /**
      * 실시간 체결 통보 응답 처리
      * @param message
