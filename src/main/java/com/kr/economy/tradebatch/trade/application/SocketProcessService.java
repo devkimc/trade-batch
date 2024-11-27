@@ -158,7 +158,9 @@ public class SocketProcessService {
 
             log.info("[실시간 체결 통보 응답] : {}", tradeResult);
             String kisId = result[0];
-            String kisOrderId = result[2];
+
+            // 앞자리에 붙은 0 제거
+            String kisOrderId = String.valueOf(Integer.parseInt(result[2]));
             String kisOrOrderId = result[3];
             String orderDvsnCode = result[4];
             String kisOrderDvsnCode = result[6];

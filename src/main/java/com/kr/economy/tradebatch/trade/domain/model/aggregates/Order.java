@@ -52,7 +52,7 @@ public class Order {
     private KisOrderDvsnCode kisOrderDvsnCode;  // 한투 주문 구분 코드  (시장가 주문, 지정가 주문 등)
 
     @Column
-    private String kisOrderNo;                  // 원주문 번호
+    private String kisOrderNo;                  // 주문 번호
 
     @Column
     private String kisOriginOrderNo;            // 한투 원주문 번호
@@ -105,4 +105,8 @@ public class Order {
         return OrderStatus.TRADE_SUCCESS.equals(this.orderStatus) && OrderDvsnCode.BUY.equals(this.orderDvsnCode);
     }
 
+
+    public void changeKisOrderNo(String kisOrderNo) {
+        this.kisOrderNo = kisOrderNo;
+    }
 }

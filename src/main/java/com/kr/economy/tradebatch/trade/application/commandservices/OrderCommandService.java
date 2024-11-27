@@ -79,22 +79,21 @@ public class OrderCommandService {
                 .orderDvsnCode(orderDvsnCode)
                 .quotedPrice(quotedPrice)
                 .orderPrice(0)
-                .orderQty(1)
+                .orderQty(10)
                 .kisOrderDvsnCode(kisOrderDvsnCode)
                 .build();
-        orderRepository.saveAndFlush(order);
-//        log.info("[{} 주문] 요청 전 데이터 저장 성공: {}", orderDvsnName, savedOrder);
+        orderRepository.save(order);
 
         OrderInCashReqDto orderInCashReqDto = OrderInCashReqDto.builder()
                 .cano(KisUtil.getCano(accountNo))
                 .acntPrdtCd(KisUtil.getAcntPrdtCd(accountNo))
                 .pdno(ticker)
                 .ordDvsn(kisOrderDvsnCode.getCode())
-                .ordQty("1")
+                .ordQty("10")
                 .ordUnpr("0")  // 시장가일 경우 0
                 .build();
-//        log.info("[{} 주문] 요청: {}", orderDvsnName, orderInCashReqDto);
 
+        // 한투 주문 요청
         OrderInCashResDto orderInCashResDto = domesticStockOrderClient.orderInCash(
                 "application/json",
                 "Bearer " + accessToken,
@@ -104,11 +103,15 @@ public class OrderCommandService {
                 "P",
                 orderInCashReqDto
         );
+
+        if (orderInCashResDto == null || orderInCashResDto.getOutput() == null || !"0".equals(orderInCashResDto.getResultCode())) {
+            throw new RuntimeException("[한투 주문 실패] 응답: " + orderInCashResDto);
+        }
+
         log.info("[{} 주문] 결과: {}", orderDvsnName, orderInCashResDto);
 
-        if (!"0".equals(orderInCashResDto.getResultCode())) {
-            throw new RuntimeException(orderInCashResDto.toString());
-        }
+        order.changeKisOrderNo(orderInCashResDto.getOutput().getOdno());
+        orderRepository.save(order);
     }
 
     /**

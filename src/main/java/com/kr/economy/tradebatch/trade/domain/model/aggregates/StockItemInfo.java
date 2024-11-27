@@ -32,7 +32,7 @@ public class StockItemInfo {
      * @return
      */
     public int getDailyLossLimitPrice() {
-        return this.parValue * 10;
+        return this.parValue * 100;
     }
 
     /**
