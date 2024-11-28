@@ -79,7 +79,7 @@ public class TradingHistory {
         return OrderDvsnCode.BUY.equals(orderDvsnCode);
     }
 
-    public boolean isTradeCompleted() {
+    public boolean isTraded() {
         return TRADE_RES_CODE_COMPLETION.equals(this.tradeResultCode);
     }
 
