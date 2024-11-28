@@ -81,14 +81,19 @@ public class KisAccountCommandService {
      */
     public void changeDecryptInfo(String accountId, String iv, String key) {
         if (!StringUtils.hasText(iv) || !StringUtils.hasText(key)) {
-            log.error("[Socket response] 복호화 값 미존재 iv : {}, key : {}", iv, key);
+            log.error("[Socket 복호화 정보 변경] 복호화 값 미존재 iv : {}, key : {}", iv, key);
             return;
         }
 
         KisAccount kisAccount = kisAccountQueryService.getKisAccount(accountId);
+
+        // 동일한 복호화 정보가 존재하는 경우 미변경
+        if (iv.equals(kisAccount.getSocketDecryptIv()) && key.equals(kisAccount.getSocketDecryptKey())) {
+            return;
+        }
+
         kisAccount.updateSocketDecryptKey(iv, key);
         kisAccountRepository.save(kisAccount);
-
-//        log.info("[Socket response] 복호화 값 저장 성공 iv : {}, key : {}", kisAccount.getSocketDecryptIv(), kisAccount.getSocketDecryptKey());
+        log.error("[Socket 복호화 정보 변경] iv : {}, key : {}", kisAccount.getSocketDecryptIv(), kisAccount.getSocketDecryptKey());
     }
 }

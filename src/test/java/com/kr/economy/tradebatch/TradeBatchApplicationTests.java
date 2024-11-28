@@ -1,5 +1,7 @@
 package com.kr.economy.tradebatch;
 
+import com.kr.economy.tradebatch.trade.domain.constants.KisOrderDvsnCode;
+import com.kr.economy.tradebatch.trade.domain.constants.OrderDvsnCode;
 import com.kr.economy.tradebatch.trade.domain.model.commands.CreateTradingHistoryCommand;
 import com.kr.economy.tradebatch.trade.application.SocketProcessService;
 import com.kr.economy.tradebatch.trade.application.commandservices.StockQuotesCommandService;
@@ -9,6 +11,7 @@ import com.kr.economy.tradebatch.trade.application.queryservices.StockItemInfoQu
 import com.kr.economy.tradebatch.trade.application.queryservices.TradingHistoryQueryService;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.*;
 import com.kr.economy.tradebatch.trade.infrastructure.repositories.StockQuotesSimRepository;
+import com.kr.economy.tradebatch.trade.infrastructure.repositories.TradingHistoryRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -28,9 +31,6 @@ public class TradeBatchApplicationTests {
 	private TradingHistoryCommandService tradingHistoryCommandService;
 
 	@Autowired
-	private KoreaStockOrderQueryService koreaStockOrderQueryService;
-
-	@Autowired
 	private TradingHistoryQueryService tradingHistoryQueryService;
 
 	@Autowired
@@ -41,6 +41,9 @@ public class TradeBatchApplicationTests {
 
 	@Autowired
 	private StockItemInfoQueryService stockItemInfoQueryService;
+
+	@Autowired
+	private TradingHistoryRepository tradingHistoryRepository;
 
 	@Test
 	public void buySignTest() throws Exception {
@@ -82,7 +85,7 @@ public class TradeBatchApplicationTests {
 							.kisOrderDvsnCode("00")
 							.tradingTime(tradingTime)
 							.build();
-					tradingHistoryCommandService.createTradingHistory(createTradingHistoryCommand);
+					this.createTradingHistory(createTradingHistoryCommand);
 				}
 			} else {
 				if (koreaStockOrderQueryService.getBuySignal(ticker, sharePrice, tradingTime, TEST_ID ,"")) {
@@ -95,9 +98,26 @@ public class TradeBatchApplicationTests {
 							.kisOrderDvsnCode("00")
 							.tradingTime(tradingTime)
 							.build();
-					tradingHistoryCommandService.createTradingHistory(createTradingHistoryCommand);
+					this.createTradingHistory(createTradingHistoryCommand);
 				}
 			}
 		}
+	}
+
+	private void createTradingHistory(CreateTradingHistoryCommand command) {
+		TradingHistory tradingHistory = TradingHistory
+				.builder()
+				.ticker(command.getTicker())
+				.orderDvsnCode(OrderDvsnCode.find(command.getOrderDvsnCode()))
+				.tradingPrice(command.getTradingPrice())
+				.tradingQty(command.getTradingQty())
+				.tradeResultCode(command.getTradeResultCode())
+				.kisOrderDvsnCode(KisOrderDvsnCode.find(command.getKisOrderDvsnCode()))
+				.tradingTime(command.getTradingTime())
+				.kisId(command.getKisId())
+				.kisOrderId(command.getKisOrderId())
+				.kisOrOrderId(command.getKisOrOrderId())
+				.build();
+		tradingHistoryRepository.save(tradingHistory);
 	}
 }

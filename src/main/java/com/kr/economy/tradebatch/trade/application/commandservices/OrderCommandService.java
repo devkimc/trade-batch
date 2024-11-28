@@ -2,10 +2,13 @@ package com.kr.economy.tradebatch.trade.application.commandservices;
 
 import com.kr.economy.tradebatch.common.util.KisUtil;
 import com.kr.economy.tradebatch.trade.application.queryservices.KisAccountQueryService;
+import com.kr.economy.tradebatch.trade.application.queryservices.OrderQueryService;
 import com.kr.economy.tradebatch.trade.domain.constants.KisOrderDvsnCode;
 import com.kr.economy.tradebatch.trade.domain.constants.OrderDvsnCode;
 import com.kr.economy.tradebatch.trade.domain.constants.OrderStatus;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.Order;
+import com.kr.economy.tradebatch.trade.domain.model.commands.CalculateTradeReturnCommand;
+import com.kr.economy.tradebatch.trade.domain.model.commands.CreateTradingHistoryProcessCommand;
 import com.kr.economy.tradebatch.trade.infrastructure.repositories.OrderRepository;
 import com.kr.economy.tradebatch.trade.infrastructure.rest.DomesticStockOrderClient;
 import com.kr.economy.tradebatch.trade.infrastructure.rest.dto.OrderInCashReqDto;
@@ -37,7 +40,9 @@ public class OrderCommandService {
     private String activeProfile;
 
     private final DomesticStockOrderClient domesticStockOrderClient;
+    private final TradeReturnCommandService tradeReturnCommandService;
     private final KisAccountQueryService kisAccountQueryService;
+    private final OrderQueryService orderQueryService;
     private final OrderRepository orderRepository;
 
     /**
@@ -72,18 +77,6 @@ public class OrderCommandService {
 
         String accessToken = kisAccountQueryService.getKisAccount(accountId).getAccessToken();
 
-        Order order = Order.builder()
-                .accountId(accountId)
-                .ticker(ticker)
-                .orderStatus(OrderStatus.REQUEST)
-                .orderDvsnCode(orderDvsnCode)
-                .quotedPrice(quotedPrice)
-                .orderPrice(0)
-                .orderQty(10)
-                .kisOrderDvsnCode(kisOrderDvsnCode)
-                .build();
-        orderRepository.save(order);
-
         OrderInCashReqDto orderInCashReqDto = OrderInCashReqDto.builder()
                 .cano(KisUtil.getCano(accountNo))
                 .acntPrdtCd(KisUtil.getAcntPrdtCd(accountNo))
@@ -110,7 +103,17 @@ public class OrderCommandService {
 
         log.info("[{} 주문] 결과: {}", orderDvsnName, orderInCashResDto);
 
-        order.changeKisOrderNo(orderInCashResDto.getOutput().getOdno());
+        Order order = Order.builder()
+                .accountId(accountId)
+                .ticker(ticker)
+                .orderStatus(OrderStatus.REQUEST)
+                .orderDvsnCode(orderDvsnCode)
+                .quotedPrice(quotedPrice)
+                .orderPrice(0)
+                .orderQty(10)
+                .kisOrderDvsnCode(kisOrderDvsnCode)
+                .kisOrderNo(orderInCashResDto.getOutput().getOdno())
+                .build();
         orderRepository.save(order);
     }
 
@@ -120,5 +123,37 @@ public class OrderCommandService {
     public void deleteHistory() {
         orderRepository.deleteAll();
         log.info("[트레이딩 봇] - 주문 내역 초기화 완료");
+    }
+
+    /**
+     * 주문 거래 완료 (체결 완료 후 호출)
+     */
+    public void trade(CreateTradingHistoryProcessCommand command, int tradedQty) {
+        Order order = orderQueryService.getOrderByOrderNo(command.getKisOrderId()).get();
+
+        // 미체결 주식 존재여부 체크
+        if (order.existNotTradeStock(tradedQty)) {
+            log.info("[주문, 체결 수량 비교] - 체결되지 않은 주문이 존재합니다. 주문번호: {}, 주문수량: {}, 체결수량 합: {}", order.getKisOrderNo(), order.getOrderQty(), tradedQty);
+            return;
+        }
+
+        // 주문 상태 변경 - 거래 성공
+        order.trade();
+        Order tradedOrder = orderRepository.save(order);
+
+        log.info("[거래 완료] - 주문번호: {}, 종목: {}, 가격: {}, 수량: {}"
+                , tradedOrder.getKisOrderNo(), tradedOrder.getTicker()
+                , tradedOrder.getOrderPrice(), tradedOrder.getOrderQty());
+
+        CalculateTradeReturnCommand calculateTradeReturnCommand = CalculateTradeReturnCommand.builder()
+                .accountId(command.getAccountId())
+                .ticker(command.getTicker())
+                .orderDvsnCode(command.getOrderDvsnCode())
+                .tradingPrice(Integer.parseInt(command.getTradingPrice()))
+                .tradingQty(Integer.parseInt(command.getTradingQty()))
+                .build();
+
+        // 수익 계산
+        tradeReturnCommandService.calculateTradeReturn(calculateTradeReturnCommand);
     }
 }

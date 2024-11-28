@@ -5,12 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kr.economy.tradebatch.config.SocketResultDto;
 import com.kr.economy.tradebatch.trade.application.commandservices.*;
 import com.kr.economy.tradebatch.trade.application.queryservices.*;
-import com.kr.economy.tradebatch.trade.domain.constants.KisOrderDvsnCode;
-import com.kr.economy.tradebatch.trade.domain.constants.OrderDvsnCode;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.KisAccount;
 import com.kr.economy.tradebatch.trade.domain.model.aggregates.Order;
 import com.kr.economy.tradebatch.trade.domain.model.commands.CreateTradingHistoryProcessCommand;
-import com.kr.economy.tradebatch.util.AES256;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +18,8 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 import static com.kr.economy.tradebatch.common.constants.KisStaticValues.*;
+import static com.kr.economy.tradebatch.trade.domain.constants.KisOrderDvsnCode.MARKET_ORDER;
+import static com.kr.economy.tradebatch.trade.domain.constants.OrderDvsnCode.*;
 
 @Slf4j
 @Service
@@ -50,6 +49,8 @@ public class SocketProcessService {
             }
 
             String[] resultBody = message.split("\\|");
+
+            // 실시간 조회 요청에 대한 응답
             if (resultBody.length < 4) {
                 SocketResultDto socketResultDto = objectMapper.readValue(message, SocketResultDto.class);
 
@@ -60,6 +61,7 @@ public class SocketProcessService {
 
                 SocketResultDto.Body body = socketResultDto.getBody();
 
+                // 복호화 정보 존재 여부 확인
                 if (body == null) {
                     SocketResultDto.Header header = socketResultDto.getHeader();
 
@@ -80,6 +82,7 @@ public class SocketProcessService {
 
             String trId = resultBody[1];
 
+            // TODO 전략 패턴으로 변경할지 검토
             if (TR_ID_H0STCNT0.equals(trId)) {
                 processRealTimeSharePrice(trId, message, resultBody);
 //            } else if (TR_ID_H0STCNI0.equals(trId)) {           // 실전
@@ -116,20 +119,23 @@ public class SocketProcessService {
 
             Optional<Order> optLastOrder = orderQueryService.getLastOrder(TEST_ID, ticker);
 
-            // 미체결 주문이 존재할 경우 주문하지 않음
-            if (optLastOrder.isPresent() && optLastOrder.get().isNotTrading()) {
+            // 마지막 주문이 미체결 주문일 경우 주문하지 않음 (미체결 내역 존재)
+            if (optLastOrder.isPresent() && !optLastOrder.get().isTraded()) {
                 return;
             }
 
-            // 마지막 체결 내역이 매수일 경우에만 매도
-            if (optLastOrder.isPresent() && optLastOrder.get().isCompletedBuyTrading()) {
+            if (optLastOrder.isPresent() && BUY.equals(optLastOrder.get().getOrderDvsnCode())) {
+                // 마지막 주문이 매수일 경우에만 매도
                 if (stockQuotesQueryService.getSellSignal(ticker, quotedPrice, optLastOrder.get().getOrderPrice(), tradingTime)) {
-                    orderCommandService.order(TEST_ID, ticker, OrderDvsnCode.SELL, KisOrderDvsnCode.MARKET_ORDER, quotedPrice);
+                    orderCommandService.order(TEST_ID, ticker, SELL, MARKET_ORDER, quotedPrice);
+                }
+            } else if (optLastOrder.isEmpty() || SELL.equals(optLastOrder.get().getOrderDvsnCode())) {
+                // 주문 내역이 존재하지 않거나 마지막 주문이 매도일 경우에만 매수
+                if (stockQuotesQueryService.getBuySignal(ticker, quotedPrice, tradingTime, TEST_ID, message)) {
+                    orderCommandService.order(TEST_ID, ticker, BUY, MARKET_ORDER, quotedPrice);
                 }
             } else {
-                if (stockQuotesQueryService.getBuySignal(ticker, quotedPrice, tradingTime, TEST_ID, message)) {
-                    orderCommandService.order(TEST_ID, ticker, OrderDvsnCode.BUY, KisOrderDvsnCode.MARKET_ORDER, quotedPrice);
-                }
+                log.error("[주문 신호 조회 실패] 매수매도구분: {}", optLastOrder.get().getOrderDvsnCode().getValue());
             }
         } catch (DataAccessException dae) {
             log.error("[{} 실시간 체결가 수신 DB 에러] exception : {}, message: {}", trId, dae, dae.getMessage());
@@ -148,7 +154,7 @@ public class SocketProcessService {
         try {
             // 계정 정보 조회
             KisAccount kisAccount = kisAccountQueryService.getKisAccount(TEST_ID);
-            String tradeResult = new AES256().decrypt(resultBody[3], kisAccount.getSocketDecryptKey(), kisAccount.getSocketDecryptIv());
+            String tradeResult = kisAccount.decryptMessageByKeyAndIv(resultBody[3]);
 
             String[] result = tradeResult.split("\\^");
             if (result.length < 15) {
@@ -186,7 +192,7 @@ public class SocketProcessService {
                     .build();
 
             // 체결 내역 저장
-            tradingHistoryCommandService.createTradingHistoryProcess(createTradingHistoryProcessCommand);
+            tradingHistoryCommandService.tradeBySocketResponse(createTradingHistoryProcessCommand);
         } catch (DataAccessException dae) {
             log.error("[{} 실시간 체결통보 수신 DB 에러] exception : {}, message: {}", trId, dae, message);
         } catch (RuntimeException re) {

@@ -65,48 +65,19 @@ public class Order {
     @LastModifiedDate
     private LocalDateTime lastModifiedDate;     // 수정 시간
 
-    /**
-     * 주문 상태 업데이트
-     * @param orderStatus
-     */
-    public void updateOrderStatus(OrderStatus orderStatus) {
-        this.orderStatus = orderStatus;
+    public void trade() {
+        this.orderStatus = OrderStatus.TRADE_SUCCESS;
     }
 
     /**
-     * 주문 가격 업데이트
-     * @param orderPrice
-     */
-    public void updateOrderPrice(int orderPrice) {
-        this.orderPrice = orderPrice;
-    }
-
-    /**
-     * 미체결 주문인지 확인
-     */
-    public boolean isNotTrading() {
-        return OrderStatus.REQUEST.equals(this.orderStatus) ||
-                OrderStatus.ORDER_SUCCESS.equals(this.orderStatus);
-    }
-
-    /**
-     * 체결 주문인지 확인
+     * 거래된 주문인지 확인
      * @return
      */
-    public boolean isTrading() {
+    public boolean isTraded() {
         return OrderStatus.TRADE_SUCCESS.equals(this.orderStatus);
     }
 
-    /**
-     * 체결된 매수 주문인지 확인
-     * @return
-     */
-    public boolean isCompletedBuyTrading() {
-        return OrderStatus.TRADE_SUCCESS.equals(this.orderStatus) && OrderDvsnCode.BUY.equals(this.orderDvsnCode);
-    }
-
-
-    public void changeKisOrderNo(String kisOrderNo) {
-        this.kisOrderNo = kisOrderNo;
+    public boolean existNotTradeStock(int tradedQty) {
+        return this.orderQty != tradedQty;
     }
 }

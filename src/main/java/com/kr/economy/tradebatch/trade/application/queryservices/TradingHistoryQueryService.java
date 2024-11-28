@@ -34,6 +34,9 @@ public class TradingHistoryQueryService {
     }
 
     public List<TradingHistory> getTradingHistoryList(String ticker, String kisOrderId) {
-        return tradingHistoryRepository.findByTickerAndKisOrderId(ticker, kisOrderId);
+        List<TradingHistory> tradingHistoryList = tradingHistoryRepository.findByTickerAndKisOrderId(ticker, kisOrderId);
+
+        log.info("[체결 내역 조회] - 주문번호: {}, 체결 건수: {}건", kisOrderId, tradingHistoryList.size());
+        return tradingHistoryList;
     }
 }

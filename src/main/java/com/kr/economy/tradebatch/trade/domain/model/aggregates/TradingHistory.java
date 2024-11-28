@@ -12,6 +12,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 import static com.kr.economy.tradebatch.common.constants.KisStaticValues.TRADE_RES_CODE_COMPLETION;
+import static com.kr.economy.tradebatch.common.constants.KisStaticValues.TRADE_RES_CODE_ORDER_TRANSMISSION;
 
 @Entity
 @Getter
@@ -82,11 +83,18 @@ public class TradingHistory {
         return TRADE_RES_CODE_COMPLETION.equals(this.tradeResultCode);
     }
 
-    public void changeTradeResultCode(String tradeResultCode) {
-        this.tradeResultCode = tradeResultCode;
+    /**
+     * 체결 거래 완료
+     * @param tradingPrice
+     */
+    public void trade(int tradingPrice) {
+        this.tradeResultCode = TRADE_RES_CODE_COMPLETION;
+        this.tradingPrice = tradingPrice;
     }
 
-    public void changeTradePrice(int tradingPrice) {
-        this.tradingPrice = tradingPrice;
+    public boolean isAbleToTrade(int tradingQty) {
+        return TRADE_RES_CODE_ORDER_TRANSMISSION.equals(this.tradeResultCode) &&
+                this.tradingQty == tradingQty &&
+                this.tradingPrice == 0;
     }
 }
