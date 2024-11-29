@@ -97,4 +97,8 @@ public class TradingHistory {
                 this.tradingQty == tradingQty &&
                 this.tradingPrice == 0;
     }
+
+    public int getTotalTradePrice() {
+        return this.tradingPrice * this.tradingQty;
+    }
 }

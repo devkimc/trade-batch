@@ -61,7 +61,7 @@ public class TradingHistoryCommandService {
                     .kisOrOrderId(command.getKisOrOrderId())
                     .build();
 
-            // 주문접수 상태의 체결 내역 생성
+            // 체결 내역 생성
             tradingHistoryRepository.save(tradingHistory);
             
             if (TRADE_RES_CODE_COMPLETION.equals(tradeResultCode)) {
@@ -70,17 +70,21 @@ public class TradingHistoryCommandService {
                 // 주문번호와 일치하는 체결 내역을 모두 조회
                 List<TradingHistory> tradingHistoryList = tradingHistoryQueryService.getTradingHistoryList(ticker, kisOrderId);
 
-                // 미체결 내역 추출
-//                TradingHistory tradingHistory = this.filterNotTradedTradingHistory(tradingHistoryList, command);
-
-                // 미체결 내역 거래
-//                this.trade(tradingHistory, tradingPrice);
-
                 // 체결 수량의 합 조회
                 int tradingQtySum = this.getTradedQtySum(tradingHistoryList, order);
 
+                // 미체결 주식 존재여부 체크
+                if (order.existsNotTradedStock(tradingQtySum)) return;
+
+                // TODO 네이밍 변경
+                // 한 주문에 대한 모든 체결 금액의 합
+                int totalTradePriceOfOrder = tradingHistoryList.stream()
+                        .filter(TradingHistory::isTraded)
+                        .mapToInt(TradingHistory::getTotalTradePrice)
+                        .sum();
+
                 // 주문 거래 완료
-                orderCommandService.trade(command, tradingQtySum);
+                orderCommandService.trade(command, order, totalTradePriceOfOrder);
             }
         } catch (DataAccessException dae) {
             log.error("[체결 내역 저장 DB 에러] exception : {}, ticker: {}, orderId: {}", dae, ticker, kisOrderId);

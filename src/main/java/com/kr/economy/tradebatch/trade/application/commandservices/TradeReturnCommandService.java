@@ -26,7 +26,7 @@ public class TradeReturnCommandService {
      * 수익 계산
      * @param command
      */
-    public void calculateTradeReturn(CalculateTradeReturnCommand command) {
+    public void calculateTradeReturn(CalculateTradeReturnCommand command, int totalTradePriceSum) {
         try {
             TradeReturnId tradeReturnId = TradeReturnId.builder()
                     .accountId(command.getAccountId())
@@ -47,7 +47,7 @@ public class TradeReturnCommandService {
             // 매수, 매도 금액 증가
             tradeReturn.addTradePrice(
                     OrderDvsnCode.find(command.getOrderDvsnCode()),
-                    command.getTradingPrice());
+                    totalTradePriceSum);
 
             tradeReturnRepository.save(tradeReturn);
         } catch (DataAccessException dae) {

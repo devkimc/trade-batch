@@ -128,14 +128,7 @@ public class OrderCommandService {
     /**
      * 주문 거래 완료 (체결 완료 후 호출)
      */
-    public void trade(CreateTradingHistoryProcessCommand command, int tradedQty) {
-        Order order = orderQueryService.getOrderByOrderNo(command.getKisOrderId()).get();
-
-        // 미체결 주식 존재여부 체크
-        if (order.existNotTradeStock(tradedQty)) {
-            log.info("[주문, 체결 수량 비교] - 체결되지 않은 주문이 존재합니다. 주문번호: {}, 주문수량: {}, 체결수량 합: {}", order.getKisOrderNo(), order.getOrderQty(), tradedQty);
-            return;
-        }
+    public void trade(CreateTradingHistoryProcessCommand command, Order order, int totalTradePriceSum) {
 
         // 주문 상태 변경 - 거래 성공
         order.trade();
@@ -154,6 +147,6 @@ public class OrderCommandService {
                 .build();
 
         // 수익 계산
-        tradeReturnCommandService.calculateTradeReturn(calculateTradeReturnCommand);
+        tradeReturnCommandService.calculateTradeReturn(calculateTradeReturnCommand, totalTradePriceSum);
     }
 }

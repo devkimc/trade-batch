@@ -126,7 +126,7 @@ public class SocketProcessService {
 
             if (optLastOrder.isPresent() && BUY.equals(optLastOrder.get().getOrderDvsnCode())) {
                 // 마지막 주문이 매수일 경우에만 매도
-                if (stockQuotesQueryService.getSellSignal(ticker, quotedPrice, optLastOrder.get().getOrderPrice(), tradingTime)) {
+                if (stockQuotesQueryService.getSellSignal(ticker, quotedPrice, optLastOrder.get().getQuotedPrice(), tradingTime)) {
                     orderCommandService.order(TEST_ID, ticker, SELL, MARKET_ORDER, quotedPrice);
                 }
             } else if (optLastOrder.isEmpty() || SELL.equals(optLastOrder.get().getOrderDvsnCode())) {

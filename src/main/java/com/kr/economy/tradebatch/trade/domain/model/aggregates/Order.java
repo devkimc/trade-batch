@@ -43,7 +43,7 @@ public class Order {
     private int quotedPrice;                     // 주문 시 주가
 
     @Column
-    private int orderPrice;                   // 시장가 주문의 경우 0
+    private int orderPrice;                     // 시장가 주문의 경우 0
 
     @Column(nullable = false)
     private int orderQty;                            // 주문 수량
@@ -77,7 +77,13 @@ public class Order {
         return OrderStatus.TRADE_SUCCESS.equals(this.orderStatus);
     }
 
-    public boolean existNotTradeStock(int tradedQty) {
-        return this.orderQty != tradedQty;
+    public boolean existsNotTradedStock(int tradedQty) {
+        boolean exists = this.orderQty != tradedQty;
+
+        if (exists) {
+            log.info("[주문, 체결 수량 비교] - 체결되지 않은 주문이 존재합니다. 주문번호: {}, 주문수량: {}, 체결수량 합: {}", this.getKisOrderNo(), this.getOrderQty(), tradedQty);
+        }
+
+        return exists;
     }
 }
