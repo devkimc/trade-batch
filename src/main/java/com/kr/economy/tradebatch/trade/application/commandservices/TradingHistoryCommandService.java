@@ -76,6 +76,7 @@ public class TradingHistoryCommandService {
                 // 미체결 주식 존재여부 체크
                 if (order.existsNotTradedStock(tradingQtySum)) return;
 
+                // 모든 주식 체결 시 로직
                 // TODO 네이밍 변경
                 // 한 주문에 대한 모든 체결 금액의 합
                 int totalTradePriceOfOrder = tradingHistoryList.stream()

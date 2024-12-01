@@ -94,6 +94,6 @@ public class KisAccountCommandService {
 
         kisAccount.updateSocketDecryptKey(iv, key);
         kisAccountRepository.save(kisAccount);
-        log.error("[Socket 복호화 정보 변경] iv : {}, key : {}", kisAccount.getSocketDecryptIv(), kisAccount.getSocketDecryptKey());
+        log.info("[Socket 복호화 정보 변경] iv : {}, key : {}", kisAccount.getSocketDecryptIv(), kisAccount.getSocketDecryptKey());
     }
 }
