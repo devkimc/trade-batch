@@ -35,10 +35,10 @@ public class TradingHistory {
     private OrderDvsnCode orderDvsnCode;        // 주문 구분 코드 (매수 / 매도)
 
     @Column
-    private int tradingPrice;                 // 체결단가
+    private Integer tradingPrice;                 // 체결단가
 
     @Column(nullable = false)
-    private int tradingQty;                          // 체결 수량
+    private Integer tradingQty;                          // 체결 수량
 
     // 거부여부
     private TradingResultType tradingResultType;

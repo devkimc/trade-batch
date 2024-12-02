@@ -21,7 +21,7 @@ public class StockItemInfo {
     private String tickerName;              // 종목 명
 
     @Column
-    private int parValue;                   // 액면가
+    private Integer parValue;                   // 액면가
 
     @Column
     private String useYn;                   // 사용 여부

@@ -45,9 +45,10 @@ public class TradeReturnCommandService {
                     );
 
             // 매수, 매도 금액 증가
-            tradeReturn.addTradePrice(
-                    OrderDvsnCode.find(command.getOrderDvsnCode()),
-                    totalTradePriceSum);
+            tradeReturn.changeTradePrice(OrderDvsnCode.find(command.getOrderDvsnCode()), totalTradePriceSum);
+
+            // 수수료 계산
+            tradeReturn.changeTradingFee(OrderDvsnCode.find(command.getOrderDvsnCode()), totalTradePriceSum);
 
             tradeReturnRepository.save(tradeReturn);
         } catch (DataAccessException dae) {

@@ -25,10 +25,13 @@ public class TradeReturn {
     private TradeReturnId tradeReturnId;    // 순번
 
     @Column
-    private int totalBuyPrice;              // 총 매수 금액
+    private Integer totalBuyPrice;              // 총 매수 금액
 
     @Column
-    private int totalSellPrice;             // 총 매도 금액
+    private Integer totalSellPrice;             // 총 매도 금액
+
+    @Column
+    private Float tradingFee;             // 수수료 + 증권거래세
 
     @Column(name = "crt_dtm")
     @CreatedDate
@@ -39,7 +42,7 @@ public class TradeReturn {
     private LocalDateTime lastModifiedDate; // 수정 시간
 
     // 체결 금액 추가
-    public void addTradePrice(OrderDvsnCode orderDvsnCode, int price) {
+    public void changeTradePrice(OrderDvsnCode orderDvsnCode, int price) {
         if (OrderDvsnCode.BUY.equals(orderDvsnCode)) {
             this.totalBuyPrice = this.totalBuyPrice + price;
         } else if (OrderDvsnCode.SELL.equals(orderDvsnCode)) {
@@ -68,5 +71,12 @@ public class TradeReturn {
 
         // 당일 손실 여부 && 당일 손실 금액 >= 당일 최대 손실 금액
         return this.isSufferedLoss() && this.getLossPrice() >= dailyLossLimitPrice;
+    }
+
+    // 수수료 계산
+    public void changeTradingFee(OrderDvsnCode orderDvsnCode, int price) {
+        if (OrderDvsnCode.SELL.equals(orderDvsnCode)) {
+            this.tradingFee = (float) (this.tradingFee + (price * 0.0018));
+        }
     }
 }

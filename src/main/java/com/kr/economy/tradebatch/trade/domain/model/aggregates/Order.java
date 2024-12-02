@@ -40,13 +40,13 @@ public class Order {
     private OrderDvsnCode orderDvsnCode;        // 주문 구분 코드 (매수 / 매도)
 
     @Column
-    private int quotedPrice;                     // 주문 시 주가
+    private Integer quotedPrice;                     // 주문 시 주가
 
     @Column
-    private int orderPrice;                     // 시장가 주문의 경우 0
+    private Integer orderPrice;                     // 시장가 주문의 경우 0
 
     @Column(nullable = false)
-    private int orderQty;                            // 주문 수량
+    private Integer orderQty;                            // 주문 수량
 
     @Column(nullable = false)
     private KisOrderDvsnCode kisOrderDvsnCode;  // 한투 주문 구분 코드  (시장가 주문, 지정가 주문 등)

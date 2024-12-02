@@ -28,7 +28,7 @@ public class StockQuotes {
     private String ticker;                  // 종목 코드
 
     @Column
-    private int quotedPrice;                 // 주가 (현재가, 체결가)
+    private Integer quotedPrice;                 // 주가 (현재가, 체결가)
 
     @Column
     private PriceTrendType priceTrendType;  // 가격 추세 유형

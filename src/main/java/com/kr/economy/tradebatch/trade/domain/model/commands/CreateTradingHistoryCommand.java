@@ -11,8 +11,8 @@ public class CreateTradingHistoryCommand {
 
     private String ticker;                  // 종목 코드
     private String orderDvsnCode;        // 주문 구분 코드 (매수 / 매도)
-    private int tradingPrice;                 // 체결단가
-    private int tradingQty;                          // 체결 수량
+    private Integer tradingPrice;                 // 체결단가
+    private Integer tradingQty;                          // 체결 수량
     private String tradingResultType;
     private String kisOrderDvsnCode;  // 한투 주문 구분 코드  (시장가 주문, 지정가 주문 등)
     private String tradingTime;
