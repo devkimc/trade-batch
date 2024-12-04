@@ -41,6 +41,7 @@ public class TradeReturnCommandService {
                                     .tradeReturnId(tradeReturnId)
                                     .totalBuyPrice(0)
                                     .totalSellPrice(0)
+                                    .tradingFee(0.0f)
                                     .build()
                     );
 

@@ -53,8 +53,8 @@ public class TradeReturn {
     }
 
     // 손실 금액 반환
-    public int getLossPrice() {
-        return Math.abs(totalSellPrice - totalBuyPrice);
+    public float getLossPrice() {
+        return Math.abs(this.totalSellPrice - this.totalBuyPrice - this.tradingFee);
     }
 
     // 손실 여부 반환

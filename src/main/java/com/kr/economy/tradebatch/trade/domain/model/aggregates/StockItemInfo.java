@@ -63,7 +63,7 @@ public class StockItemInfo {
      */
     public boolean haveToSell(int buyPrice, int quotedPrice) {
         // 오후 3시 25분일 경우 모두 매도
-        if (LocalDateTime.now().isAfter(getTodayLocalDateTime(15, 25, 0))) {
+        if (LocalDateTime.now().isAfter(getTodayLocalDateTime(15, 5, 0))) {
             log.info("[매도 신호] 장 마감 5분 전 매도 : {}", LocalDateTime.now());
             return true;
         }

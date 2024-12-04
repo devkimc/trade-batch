@@ -122,7 +122,7 @@ public class TradingHistoryCommandService {
                 .filter(TradingHistory::isTraded)
                 .mapToInt(TradingHistory::getTradingQty)
                 .sum();
-        log.info("[주문, 체결 수량 비교] - 주문번호: {}, 주문수량: {}, 체결수량 합: {}", order.getKisOrderNo(), order.getOrderQty(), tradingQtySum);
+//        log.info("[주문, 체결 수량 비교] - 주문번호: {}, 주문수량: {}, 체결수량 합: {}", order.getKisOrderNo(), order.getOrderQty(), tradingQtySum);
 
         return tradingQtySum;
     }

@@ -114,8 +114,8 @@ public class StockQuotesQueryService {
             return false;
         }
 
-        if (LocalDateTime.now().isAfter(getTodayLocalDateTime(15, 25, 0))) {
-            log.info("[매수 신호 조회] 장 마감 전 5분 이내 - 매수 X");
+        if (LocalDateTime.now().isAfter(getTodayLocalDateTime(15, 5, 0))) {
+            log.info("[매수 신호 조회] 장 마감 전 25분 이내 - 매수 X");
             return false;
         }
 

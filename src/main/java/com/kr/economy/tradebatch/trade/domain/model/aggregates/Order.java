@@ -80,9 +80,9 @@ public class Order {
     public boolean existsNotTradedStock(int tradedQty) {
         boolean exists = this.orderQty != tradedQty;
 
-        if (exists) {
-            log.info("[주문, 체결 수량 비교] - 체결되지 않은 주문이 존재합니다. 주문번호: {}, 주문수량: {}, 체결수량 합: {}", this.getKisOrderNo(), this.getOrderQty(), tradedQty);
-        }
+//        if (exists) {
+//            log.info("[주문, 체결 수량 비교] - 체결되지 않은 주문이 존재합니다. 주문번호: {}, 주문수량: {}, 체결수량 합: {}", this.getKisOrderNo(), this.getOrderQty(), tradedQty);
+//        }
 
         return exists;
     }
